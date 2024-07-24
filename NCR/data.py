@@ -18,6 +18,7 @@ class PrecompDataset(data.Dataset):
 
     def __init__(
         self,
+        name,
         captions,
         images,
         data_split,
@@ -46,7 +47,7 @@ class PrecompDataset(data.Dataset):
             self.im_div = 1
 
         # the development set for coco is large and so validation would be slow
-        if data_split == "dev":
+        if data_split == "dev" and name!='h5100k_precomp':
             self.length = 1000 * self.im_div
 
         # one image has five captions
@@ -243,6 +244,7 @@ def get_dataset(data_path, data_name, data_split, vocab, return_id_caps=False):
 
 
 def get_loader(
+    name,
     captions,
     images,
     data_split,
@@ -256,7 +258,7 @@ def get_loader(
     ctt_probability=[]
 ):
     if data_split == "warmup":
-        dset = PrecompDataset(captions, images, "train", noise_ratio, noise_file)
+        dset = PrecompDataset(name, captions, images, "train", noise_ratio, noise_file)
         data_loader = torch.utils.data.DataLoader(
             dataset=dset,
             batch_size=batch_size,
@@ -269,6 +271,7 @@ def get_loader(
 
     elif data_split == "train":
         labeled_dataset = PrecompDataset(
+            name, 
             captions,
             images,
             "train",
@@ -290,6 +293,7 @@ def get_loader(
         )
 
         unlabeled_dataset = PrecompDataset(
+            name, 
             captions,
             images,
             "train",
@@ -311,7 +315,7 @@ def get_loader(
         return labeled_trainloader, unlabeled_trainloader
 
     elif data_split == "dev":
-        dset = PrecompDataset(captions, images, data_split)
+        dset = PrecompDataset(name, captions, images, data_split)
         data_loader = torch.utils.data.DataLoader(
             dataset=dset,
             batch_size=batch_size,
@@ -321,7 +325,7 @@ def get_loader(
             num_workers=workers,
         )
     elif data_split in ["test", "testall", "test5k"]:
-        dset = PrecompDataset(captions, images, data_split)
+        dset = PrecompDataset(name, captions, images, data_split)
         data_loader = torch.utils.data.DataLoader(
             dataset=dset,
             batch_size=batch_size,

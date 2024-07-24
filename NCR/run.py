@@ -1,4 +1,5 @@
 import os
+os.environ["NCCL_DEBUG"] = "INFO"
 import sys
 import time
 import random
@@ -11,7 +12,7 @@ import torch
 from utils import save_config, load_config
 from evaluation import evalrank
 from co_train import main
-
+import torch.multiprocessing as mp
 
 def run():
 
@@ -127,7 +128,7 @@ def run():
     )
     parser.add_argument("--warmup_epoch", default=1, type=int, help="warm up epochs")
     parser.add_argument("--warmup_epoch_2", default=25, type=int, help="epochs of warm up stage 2")
-    parser.add_argument("--model_path", default="", help="warm up models")
+    parser.add_argument("--model_path", default="", help="the path to the loaded models")
     parser.add_argument("--ctt_dir", default="", help="warm up models")
     parser.add_argument("--resume", action="store_true", help="resume training")
     parser.add_argument(
@@ -138,14 +139,27 @@ def run():
     )
 
     # Runing Settings
-    parser.add_argument("--gpu", default="0", help="Which gpu to use.")
+    parser.add_argument("--gpu", default=None, type=int, help="GPU id to use.")
     parser.add_argument(
         "--seed", default=0, type=int, help="Random seed."
     )
     parser.add_argument(
         "--output_dir", default=os.path.join("output", current_time), help="Output dir."
     )
-
+    ## args for distributed training (from https://github.com/pytorch/examples/blob/master/imagenet/main.py)
+    parser.add_argument('--world-size', default=-1, type=int,
+                        help='number of nodes for distributed training')
+    parser.add_argument('--rank', default=-1, type=int,
+                        help='**node rank** for distributed training')
+    parser.add_argument('--dist-url', default='tcp://127.0.0.1:10001', type=str,
+                        help='url used to set up distributed training')
+    parser.add_argument('--dist-backend', default='nccl', type=str,
+                        help='distributed backend')
+    parser.add_argument('--multiprocessing-distributed', action='store_true',
+                        help='Use multi-processing distributed training to launch '
+                             'N processes per node, which has N GPUs. This is the '
+                             'fastest way to use PyTorch for either single node or '
+                             'multi node data parallel training')
     # load arguments
     opt = parser.parse_args()
 
@@ -166,7 +180,9 @@ def run():
     print(opt)
 
     # CUDA env
-    os.environ["CUDA_VISIBLE_DEVICES"] = opt.gpu
+    # os.environ["CUDA_VISIBLE_DEVICES"] = opt.gpu
+    # os.environ["CUDA_VISIBLE_DEVICES"] = '2,3'
+    
 
     # set random seed
     random.seed(opt.seed)
@@ -182,7 +198,25 @@ def run():
 
     # traing and evaluation
     print("\n*-------- Training --------*")
-    main(opt)
+    # main(opt)
+    if opt.dist_url == "env://" and opt.world_size == -1:
+        opt.world_size = int(os.environ["WORLD_SIZE"])
+    
+    #distributed: true if manually selected or if world_size > 1
+    opt.distributed = opt.world_size > 1 or opt.multiprocessing_distributed 
+    ngpus_per_node = torch.cuda.device_count() # number of gpus of each node
+    
+    #divide the batch_size according to the number of nodes
+    opt.batch_size = int(opt.batch_size / opt.world_size)
+    
+    if opt.multiprocessing_distributed:
+        # now, opt.world_size means num of total processes in all nodes
+        opt.world_size = ngpus_per_node * opt.world_size 
+        print('run: ', opt.gpu)
+        #args=(,) means the arguments of main_worker
+        mp.spawn(main, nprocs=ngpus_per_node, args=(ngpus_per_node, opt)) 
+    else:
+        main(opt.gpu, ngpus_per_node, opt)
 
     # print("\n*-------- Testing --------*")
     # if opt.data_name == "coco_precomp":

@@ -118,7 +118,7 @@ class EncoderText(nn.Module):
         # embed word ids to vectors
         cap_emb = self.embed(captions)
         cap_emb = self.dropout(cap_emb)
-
+        
         # pack the caption
         packed = pack_padded_sequence(
             cap_emb, lengths, batch_first=True, enforce_sorted=False
@@ -459,6 +459,7 @@ class ContrastiveLoss(nn.Module):
 
     def forward(
         self,
+        opt,
         scores,
         hard_negative=True,
         labels=None,
@@ -508,7 +509,7 @@ class ContrastiveLoss(nn.Module):
         elif mode == "warmup_sele":
             all_loss = cost_s_mean + cost_im_mean
             y = all_loss.topk(k=int(scores.size(0)*self.warmup_rate), dim=0, largest=False, sorted=True)
-            index = torch.zeros(scores.size(0)).cuda()
+            index = torch.zeros(scores.size(0)).cuda(opt.gpu)
             index[y[1]] = 1
             all_loss = all_loss*index
             #选择clean样本
@@ -599,11 +600,75 @@ class SGRAF(object):
         self.img_pro_head = Projection_Head(input_size=36*1024, output_size=opt.proj_dim)
         # self.txt_pro_head = Projection_Head(input_size=30720)
 
-        if torch.cuda.is_available():
-            self.img_enc.cuda()
-            self.txt_enc.cuda()
-            self.sim_enc.cuda()
-            self.img_pro_head.cuda()
+        if not torch.cuda.is_available():
+            raise Exception('ONLY GPU TRAINING IS SUPPORTED')
+        elif opt.distributed:
+            print('model: ', opt.gpu)
+            if opt.gpu is not None:
+                torch.cuda.set_device(opt.gpu)            
+                self.img_enc.cuda(opt.gpu)
+                self.img_enc = torch.nn.parallel.DistributedDataParallel(self.img_enc,
+                                                                            device_ids=[opt.gpu])
+                self.txt_enc.cuda(opt.gpu)
+                self.txt_enc = torch.nn.parallel.DistributedDataParallel(self.txt_enc,
+                                                                            device_ids=[opt.gpu])
+                self.sim_enc.cuda(opt.gpu)
+                self.sim_enc = torch.nn.parallel.DistributedDataParallel(self.sim_enc,
+                                                                            device_ids=[opt.gpu])
+                self.img_pro_head.cuda(opt.gpu)
+                self.img_pro_head = torch.nn.parallel.DistributedDataParallel(self.img_pro_head,
+                                                                            device_ids=[opt.gpu])
+                
+            else:
+                # if arg.gpu is None, DDP will divide and allocate batch_size
+                # to all available GPUs if device_ids are not set.
+                self.img_enc.cuda()
+                self.img_enc = torch.nn.parallel.DistributedDataParallel(self.img_enc)
+                self.txt_enc.cuda()
+                self.txt_enc = torch.nn.parallel.DistributedDataParallel(self.txt_enc)
+                self.sim_enc.cuda()
+                self.sim_enc = torch.nn.parallel.DistributedDataParallel(self.sim_enc)
+                self.img_pro_head.cuda()
+                self.img_pro_head = torch.nn.parallel.DistributedDataParallel(self.img_pro_head)
+                
+        elif opt.gpu is not None:
+            print(opt.gpu)
+            torch.cuda.set_device(opt.gpu)
+            self.img_enc.cuda(opt.gpu)
+            self.txt_enc.cuda(opt.gpu)
+            self.sim_enc.cuda(opt.gpu)
+            self.img_pro_head.cuda(opt.gpu)   
+        else:
+            # model.train_model = torch.nn.DataParallel(model.train_model).cuda()
+            # model.eval_model = torch.nn.DataParallel(model.eval_model).cuda()
+            pass
+
+        # if torch.cuda.is_available():
+        #     if opt.gpu is not None:
+        #         torch.cuda.set_device(opt.gpu)
+        #         self.img_enc.cuda(opt.gpu)
+        #         self.txt_enc.cuda(opt.gpu)
+        #         self.sim_enc.cuda(opt.gpu)
+        #         self.img_pro_head.cuda(opt.gpu)
+        #     elif opt.distributed:
+        #         self.img_enc.cuda()
+        #         self.img_enc = torch.nn.parallel.DistributedDataParallel(self.img_enc)
+        #         self.txt_enc.cuda()
+        #         self.txt_enc = torch.nn.parallel.DistributedDataParallel(self.txt_enc)
+        #         self.sim_enc.cuda()
+        #         self.sim_enc = torch.nn.parallel.DistributedDataParallel(self.sim_enc)
+        #         self.img_pro_head.cuda()
+        #         self.img_pro_head = torch.nn.parallel.DistributedDataParallel(self.img_pro_head)
+        #     else:
+        #         self.img_enc = torch.nn.DataParallel(self.img_enc).cuda()
+        #         self.txt_enc = torch.nn.DataParallel(self.txt_enc).cuda()
+        #         self.sim_enc = torch.nn.DataParallel(self.sim_enc).cuda()
+        #         self.img_pro_head = torch.nn.DataParallel(self.img_pro_head).cuda()
+            # self.img_enc.cuda()
+            # self.txt_enc.cuda()
+            # self.sim_enc.cuda()
+            # self.img_pro_head.cuda()
+
             # self.txt_pro_head.cuda()
             cudnn.benchmark = True
 
@@ -654,11 +719,11 @@ class SGRAF(object):
         # self.txt_pro_head.eval()
 
 
-    def forward_emb(self, images, captions, lengths):
+    def forward_emb(self, opt, images, captions, lengths):
         """Compute the image and caption embeddings"""
         if torch.cuda.is_available():
-            images = images.cuda()
-            captions = captions.cuda()
+            images = images.cuda(opt.gpu)
+            captions = captions.cuda(opt.gpu)
 
         # Forward feature encoding
         img_embs = self.img_enc(images)
@@ -672,6 +737,7 @@ class SGRAF(object):
 
     def train(
         self,
+        opt,
         images,
         captions,
         lengths,
@@ -694,7 +760,7 @@ class SGRAF(object):
         self.Eiters += 1
 
         # compute the embeddings
-        img_embs, cap_embs, cap_lens = self.forward_emb(images, captions, lengths)
+        img_embs, cap_embs, cap_lens = self.forward_emb(opt, images, captions, lengths)
         if torch.isnan(img_embs).any():
             import pdb
             pdb.set_trace()
@@ -807,6 +873,7 @@ class SGRAF(object):
         self.optimizer.zero_grad()
         
         triplet_loss = self.criterion(
+            opt,
             sims,
             hard_negative=hard_negative,
             labels=labels,

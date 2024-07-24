@@ -9,7 +9,7 @@ from itertools import chain
 
 import torch
 import numpy as np
-
+import argparse
 from vocab import Vocabulary, deserialize_vocab
 from model import SGRAF
 from collections import OrderedDict
@@ -17,7 +17,7 @@ from utils import AverageMeter, ProgressMeter
 from data import get_dataset, get_loader
 
 
-def encode_data(model, data_loader, log_step=10, logging=print):
+def encode_data(opt, model, data_loader, log_step=10, logging=print):
     """Encode all images and captions loadable by `data_loader`
     """
     batch_time = AverageMeter("batch", ":6.3f")
@@ -43,7 +43,7 @@ def encode_data(model, data_loader, log_step=10, logging=print):
         # image_ids.extend(img_ids)
         # compute the embeddings
         with torch.no_grad():
-            img_emb, cap_emb, cap_len = model.forward_emb(images, captions, lengths)
+            img_emb, cap_emb, cap_len = model.forward_emb(opt, images, captions, lengths)
         if img_embs is None:
             img_embs = np.zeros(
                 (len(data_loader.dataset), img_emb.size(1), img_emb.size(2))
@@ -69,7 +69,7 @@ def encode_data(model, data_loader, log_step=10, logging=print):
     return img_embs, cap_embs, cap_lens
 
 
-def evalrank(model_path, data_path=None, vocab_path=None, data_loader=None, split="dev", fold5=False):
+def evalrank(model_path, data_path=None, vocab_path=None, data_loader=None, split="dev", fold5=False, gpu=None):
     """
     Evaluate a trained model on either dev or test. If `fold5=True`, 5 fold
     cross-validation is done (only for MSCOCO). Otherwise, the full data is
@@ -77,8 +77,9 @@ def evalrank(model_path, data_path=None, vocab_path=None, data_loader=None, spli
     """
 
     # load model and options
-    checkpoint = torch.load(model_path)
+    checkpoint = torch.load(model_path, torch.device('cuda'))
     opt = checkpoint["opt"]
+    opt.gpu = gpu if gpu != None else opt.gpu
     print("training epoch: ", checkpoint["epoch"])
     opt.workers = 0
     print(opt)
@@ -105,7 +106,7 @@ def evalrank(model_path, data_path=None, vocab_path=None, data_loader=None, spli
             )
         else:
             captions, images = get_dataset(opt.data_path, opt.data_name, split, vocab)
-        data_loader = get_loader(captions, images, split, opt.batch_size, opt.workers)
+        data_loader = get_loader(opt.data_name, captions, images, split, opt.batch_size, opt.workers)
 
     if opt.data_name in ["cc152k_precomp", "h5100k_precomp"]:
         per_captions = 1
@@ -137,8 +138,8 @@ def evalrank(model_path, data_path=None, vocab_path=None, data_loader=None, spli
 
     print("Computing results...")
     with torch.no_grad():
-        img_embs_A, cap_embs_A, cap_lens_A = encode_data(model_A, data_loader)
-        img_embs_B, cap_embs_B, cap_lens_B = encode_data(model_B, data_loader)
+        img_embs_A, cap_embs_A, cap_lens_A = encode_data(opt, model_A, data_loader)
+        img_embs_B, cap_embs_B, cap_lens_B = encode_data(opt, model_B, data_loader)
 
     print(
         "Images: %d, Captions: %d"
@@ -169,8 +170,7 @@ def evalrank(model_path, data_path=None, vocab_path=None, data_loader=None, spli
         # bi-directional retrieval
         r, rt = i2t(img_embs_A.shape[0], sims, per_captions, return_ranks=True)
         ri, rti = t2i(img_embs_A.shape[0], sims, per_captions, return_ranks=True)
-        np.savetxt('r10_indices_i2t.txt', np.where(rt[0] < 10)[0], fmt='%d')
-        np.savetxt('r10_indices_t2i.txt', np.where(rti[0] < 10)[0], fmt='%d')
+
         ar = (r[0] + r[1] + r[2]) / 3
         ari = (ri[0] + ri[1] + ri[2]) / 3
         rsum = r[0] + r[1] + r[2] + ri[0] + ri[1] + ri[2]
@@ -256,13 +256,50 @@ def shard_attn_scores(model, img_embs, cap_embs, cap_lens, opt, shard_size=1000)
             ca_start, ca_end = shard_size * j, min(shard_size * (j + 1), len(cap_embs))
 
             with torch.no_grad():
-                im = torch.from_numpy(img_embs[im_start:im_end]).float().cuda()
-                ca = torch.from_numpy(cap_embs[ca_start:ca_end]).float().cuda()
+                im = torch.from_numpy(img_embs[im_start:im_end]).float().cuda(opt.gpu)
+                ca = torch.from_numpy(cap_embs[ca_start:ca_end]).float().cuda(opt.gpu)
                 l = cap_lens[ca_start:ca_end]
                 sim = model.forward_sim(im, ca, l)
 
             sims[im_start:im_end, ca_start:ca_end] = sim.data.cpu().numpy()
     return sims
+
+
+# def i2t(npts, sims, per_captions=1, return_ranks=False):
+#     """
+#     Images->Text (Image Annotation)
+#     Images: (N, n_region, d) matrix of images
+#     Captions: (per_captions * N, max_n_word, d) matrix of captions
+#     CapLens: (per_captions * N) array of caption lengths
+#     sims: (N, per_captions * N) matrix of similarity im-cap
+#     """
+#     ranks = np.zeros(npts)
+#     top1 = np.zeros(npts)
+#     top5 = np.zeros((npts, 5), dtype=int)
+#     retreivaled_index = []
+#     for index in range(npts):
+#         inds = np.argsort(sims[index])[::-1]
+#         retreivaled_index.append(inds)
+#         # Score
+#         rank = 1e20
+#         for i in range(per_captions * index, per_captions * index + per_captions, 1):
+#             tmp = np.where(inds == i)[0][0]
+#             if tmp < rank:
+#                 rank = tmp
+#         ranks[index] = rank
+#         top1[index] = inds[0]
+#         top5[index] = inds[0:5]
+
+#     # Compute metrics
+#     r1 = 100.0 * len(np.where(ranks < 1)[0]) / len(ranks)
+#     r5 = 100.0 * len(np.where(ranks < 5)[0]) / len(ranks)
+#     r10 = 100.0 * len(np.where(ranks < 10)[0]) / len(ranks)
+#     medr = np.floor(np.median(ranks)) + 1
+#     meanr = ranks.mean() + 1
+#     if return_ranks:
+#         return (r1, r5, r10, medr, meanr), (ranks, top1, top5, retreivaled_index)
+#     else:
+#         return (r1, r5, r10, medr, meanr)
 
 
 def i2t(npts, sims, per_captions=1, return_ranks=False):
@@ -277,9 +314,22 @@ def i2t(npts, sims, per_captions=1, return_ranks=False):
     top1 = np.zeros(npts)
     top5 = np.zeros((npts, 5), dtype=int)
     retreivaled_index = []
+    recorded_indices = set()  # 用于跟踪已记录的文本编号
+    unique_indices = []  # 用于记录唯一的文本编号
+
     for index in range(npts):
+        
         inds = np.argsort(sims[index])[::-1]
         retreivaled_index.append(inds)
+
+        # 找到第一个未被记录的文本编号
+        for i in inds:
+            if i not in recorded_indices:
+            # if True:
+                recorded_indices.add(i)
+                unique_indices.append(i)
+                break
+
         # Score
         rank = 1e20
         for i in range(per_captions * index, per_captions * index + per_captions, 1):
@@ -296,10 +346,17 @@ def i2t(npts, sims, per_captions=1, return_ranks=False):
     r10 = 100.0 * len(np.where(ranks < 10)[0]) / len(ranks)
     medr = np.floor(np.median(ranks)) + 1
     meanr = ranks.mean() + 1
+
+    # 将 unique_indices 保存到 txt 文件
+    with open("unique_indices.txt", "w") as f:
+        for idx in unique_indices:
+            f.write(f"{idx}\n")
+
     if return_ranks:
         return (r1, r5, r10, medr, meanr), (ranks, top1, top5, retreivaled_index)
     else:
         return (r1, r5, r10, medr, meanr)
+
 
 
 def t2i(npts, sims, per_captions=1, return_ranks=False):
@@ -338,16 +395,29 @@ def t2i(npts, sims, per_captions=1, return_ranks=False):
 
 
 if __name__ == "__main__":
-
-    os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-    model_path = "/home/renyue/model_best.pth.tar"
-    data_path = "/data2/xuan/NoW/data/"
-    vocab_path = "/data2/xuan/NoW/vocab/"
-    print(f"loading {model_path}")
+    parser = argparse.ArgumentParser(fromfile_prefix_chars="@")
+    parser.add_argument("--gpu", default=None, type=int, help="GPU id to use.")
+    parser.add_argument(
+        "--data_path", default="data", help="path to datasets"
+    )
+    parser.add_argument(
+        "--model_path", default="", help="the path to the loaded models"
+    )
+    parser.add_argument(
+        "--vocab_path",
+        default="/data/NCR-data/vocab",
+        help="Path to saved vocabulary json files.",
+    )
+    opt = parser.parse_args()
+    # model_path = "/home/renyue/model_best.pth.tar"
+    # data_path = "/data2/xuan/NoW/data/"
+    # vocab_path = "/data2/xuan/NoW/vocab/"
+    print(f"loading {opt.model_path}")
     evalrank(
-        model_path,
-        data_path=data_path,
-        vocab_path=vocab_path,
+        opt.model_path,
+        data_path=opt.data_path,
+        vocab_path=opt.vocab_path,
         split="test",
         fold5=False,
+        gpu=opt.gpu
     )

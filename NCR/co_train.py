@@ -10,9 +10,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+import torch.distributed as dist
 from sklearn.mixture import GaussianMixture
-
+from datetime import timedelta
 from data import get_loader, get_dataset
 from model import SGRAF, Projection_Head
 from vocab import Vocabulary, deserialize_vocab
@@ -125,14 +125,26 @@ class BetaMixture1D(object):
     def __str__(self):
         return 'BetaMixture1D(w={}, a={}, b={})'.format(self.weight, self.alphas, self.betas)
 
-def main(opt):
-
+def main(gpu, ngpus_per_node, opt):
+    opt.gpu = gpu
+    if opt.distributed:
+        if opt.dist_url == "env://" and opt.rank == -1:
+            opt.rank = int(os.environ["RANK"])
+        if opt.multiprocessing_distributed:
+            opt.rank = opt.rank * ngpus_per_node + gpu # compute global rank
+        # set distributed group:
+        dist.init_process_group(backend=opt.dist_backend, init_method=opt.dist_url,
+                                world_size=opt.world_size, rank=opt.rank)
     # load Vocabulary Wrapper
     print("load and process dataset ...")
-    vocab = deserialize_vocab(
-        os.path.join(opt.vocab_path, "%s_vocab.json" % opt.data_name)
-    )
-    opt.vocab_size = len(vocab)
+    if opt.data_name == "h5100k_precomp":
+        vocab = None
+        opt.vocab_size = 30047
+    else:
+        vocab = deserialize_vocab(
+            os.path.join(opt.vocab_path, "%s_vocab.json" % opt.data_name)
+        )
+        opt.vocab_size = len(vocab)
 
     # load dataset
     captions_train, images_train = get_dataset(
@@ -142,6 +154,7 @@ def main(opt):
 
     # data loader
     noisy_trainloader, data_size, clean_labels = get_loader(
+        opt.data_name,
         captions_train,
         images_train,
         "warmup",
@@ -151,7 +164,7 @@ def main(opt):
         opt.noise_file,
     )
     val_loader = get_loader(
-        captions_dev, images_dev, "dev", opt.batch_size, opt.workers
+        opt.data_name, captions_dev, images_dev, "dev", opt.batch_size, opt.workers
     )
 
     print("load and process testing dataset ...")
@@ -159,18 +172,23 @@ def main(opt):
         split = "testall"
     else:
         split = "test"
-    vocab = deserialize_vocab(
-        os.path.join(opt.vocab_path, "%s_vocab.json" % opt.data_name)
-    )
-    opt.vocab_size = len(vocab)
+    if opt.data_name == "h5100k_precomp":
+        vocab = None
+        opt.vocab_size = 30047
+    else:
+        vocab = deserialize_vocab(
+            os.path.join(opt.vocab_path, "%s_vocab.json" % opt.data_name)
+        )
+        opt.vocab_size = len(vocab)
     if opt.data_name == "cc152k_precomp":
         captions, images, image_ids, raw_captions = get_dataset(
             opt.data_path, opt.data_name, split, vocab, return_id_caps=True
         )
     else:
         captions, images = get_dataset(opt.data_path, opt.data_name, split, vocab)
-    data_loader_test = get_loader(captions, images, split, opt.batch_size, opt.workers)
+    data_loader_test = get_loader(opt.data_name, captions, images, split, opt.batch_size, opt.workers)
 
+    opt.batch_size = int(opt.batch_size / ngpus_per_node)
     # create models
     model_A = SGRAF(opt)
     model_B = SGRAF(opt)
@@ -217,6 +235,7 @@ def main(opt):
                     distri_bank_B = pickle.load(f)
             print("\nValidattion ...")
             if opt.resume:
+                print(checkpoint.keys())
                 model_A.optimizer.load_state_dict(checkpoint['optimizer_A'])
                 model_B.optimizer.load_state_dict(checkpoint['optimizer_B'])
                 print(
@@ -308,6 +327,7 @@ def main(opt):
         print("\nModel A training ...")
         # train model_A
         labeled_trainloader, unlabeled_trainloader = get_loader(
+            opt.data_name,
             captions_train,
             images_train,
             "train",
@@ -325,6 +345,7 @@ def main(opt):
         print("\nModel B training ...")
         # train model_B
         labeled_trainloader, unlabeled_trainloader = get_loader(
+            opt.data_name,
             captions_train,
             images_train,
             "train",
@@ -443,7 +464,6 @@ def train(opt, net, net2, distri_bank, labeled_trainloader, unlabeled_trainloade
         ) = batch_train_data
         batch_size = batch_images_l.size(0)
         labels_l.append(batch_clean_labels_l)
-
         # unlabeled data
         try:
             (
@@ -465,16 +485,14 @@ def train(opt, net, net2, distri_bank, labeled_trainloader, unlabeled_trainloade
                 batch_clean_labels_u,
             ) = next(unlabeled_train_iter)
         labels_u.append(batch_clean_labels_u)
-
         # measure data loading time
         data_time.update(time.time() - end)
 
         if torch.cuda.is_available():
-            batch_prob_l = batch_prob_l.cuda()
-            batch_labels_l = batch_labels_l.cuda()
-            batch_ctt_prob_l = batch_ctt_prob_l.cuda()
-            batch_ctt_labels_l = batch_ctt_labels_l.cuda()
-
+            batch_prob_l = batch_prob_l.cuda(opt.gpu)
+            batch_labels_l = batch_labels_l.cuda(opt.gpu)
+            batch_ctt_prob_l = batch_ctt_prob_l.cuda(opt.gpu)
+            batch_ctt_labels_l = batch_ctt_labels_l.cuda(opt.gpu)
         # label refinement
         with torch.no_grad():
             net.val_start()
@@ -494,16 +512,16 @@ def train(opt, net, net2, distri_bank, labeled_trainloader, unlabeled_trainloade
         #     targets_u = targets_u.view(-1, 1)
         #     pred_labels_u.append(ptu.cpu().numpy())
         # targets_l = torch.ones_like(batch_prob_l)
-        targets_u = torch.ones(batch_images_u.size(0)).cuda()
+        targets_u = torch.ones(batch_images_u.size(0)).cuda(opt.gpu)
 
         # drop last batch if only one sample (batch normalization require)
         if batch_images_l.size(0) == 1 or batch_images_u.size(0) == 1:
             break
-
         net.train_start()
         # train with labeled + unlabeled data  exponential or linear
         # print('epoch ',i)
         triplet_loss_l, ce_loss_img_l, ce_loss_cap_l, en_loss_img_l, en_loss_cap_l = net.train(
+            opt,
             batch_images_l,
             batch_text_l,
             batch_lengths_l,
@@ -537,6 +555,7 @@ def train(opt, net, net2, distri_bank, labeled_trainloader, unlabeled_trainloade
             triplet_loss_u = 0
         else:
             triplet_loss_u = net.train(
+                opt,
                 batch_images_u,
                 batch_text_u,
                 batch_lengths_u,
@@ -562,7 +581,6 @@ def train(opt, net, net2, distri_bank, labeled_trainloader, unlabeled_trainloade
         ce_losses_cap_l.update(ce_loss_cap_l, batch_images_l.size(0))
         en_losses_img_l.update(en_loss_img_l, batch_images_l.size(0))
         en_losses_cap_l.update(en_loss_cap_l, batch_images_l.size(0))
-
         triplet_losses_u.update(triplet_loss_u, batch_images_u.size(0))
         # ce_losses_img_u.update(ce_loss_img_u, batch_images_u.size(0))
         # ce_losses_cap_u.update(ce_loss_cap_u, batch_images_u.size(0))
@@ -605,7 +623,7 @@ def warmup(opt, train_loader, model, epoch, distri_bank):
         model.train_start()
 
         # Update the model
-        triplet_loss_l, ce_loss_img_l, ce_loss_cap_l, en_loss_img_l, en_loss_cap_l = model.train(images, captions, lengths, ids, None, distri_bank, mode=opt.warmup_type)
+        triplet_loss_l, ce_loss_img_l, ce_loss_cap_l, en_loss_img_l, en_loss_cap_l = model.train(opt, images, captions, lengths, ids, None, distri_bank, mode=opt.warmup_type)
         triplet_losses_l.update(triplet_loss_l, images.size(0))
         ce_losses_img_l.update(ce_loss_img_l, images.size(0))
         ce_losses_cap_l.update(ce_loss_cap_l, images.size(0))
@@ -639,7 +657,7 @@ def validate(opt, val_loader, models=[]):
         count += 1
         print("Encoding with model {}".format(ind))
         img_embs, cap_embs, cap_lens = encode_data(
-            models[ind], val_loader, opt.log_step
+            opt, models[ind], val_loader, opt.log_step
         )
 
         # clear duplicate 5*images and keep 1*images FIXME
@@ -982,8 +1000,8 @@ def eval_train_cc(
         data_time.update(time.time() - end)
         with torch.no_grad():
             # compute the loss
-            loss_A, pseudo_label_A = model_A.train(images, captions, lengths, ids, distri_bank_A, mode="eval_loss")
-            loss_B, pseudo_label_B = model_B.train(images, captions, lengths, ids, distri_bank_B, mode="eval_loss")
+            loss_A, pseudo_label_A = model_A.train(opt, images, captions, lengths, ids, distri_bank_A, mode="eval_loss")
+            loss_B, pseudo_label_B = model_B.train(opt, images, captions, lengths, ids, distri_bank_B, mode="eval_loss")
             loss_A = loss_A.cpu().numpy()
             loss_B = loss_B.cpu().numpy()
             pseudo_label_A = pseudo_label_A.cpu()

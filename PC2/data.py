@@ -47,7 +47,7 @@ class PrecompDataset(data.Dataset):
             self.im_div = 1
 
         # the development set for coco is large and so validation would be slow
-        if data_split == "dev" and name!='h5100k_precomp':
+        if data_split == "dev" and name!='now100k_precomp':
             self.length = 1000 * self.im_div
 
         # one image has five captions
@@ -201,7 +201,7 @@ def get_dataset(data_path, data_name, data_split, vocab, return_id_caps=False):
                 captions.append(line[1].strip())
                 img_ids.append(line[0])
 
-    elif data_name in ["coco_precomp", "f30k_precomp", "h5100k_precomp"]:
+    elif data_name in ["coco_precomp", "f30k_precomp", "now100k_precomp"]:
         with open(os.path.join(data_path, "%s_caps.txt" % data_split), "r") as f:
             for line in f:
                 captions.append(line.strip())
@@ -211,7 +211,7 @@ def get_dataset(data_path, data_name, data_split, vocab, return_id_caps=False):
 
     # caption tokens
     captions_token = []
-    if data_name == 'h5100k_precomp':
+    if data_name == 'now100k_precomp':
         for index in range(len(captions)):
             caption = captions[index]
             tokens = caption.split(',')

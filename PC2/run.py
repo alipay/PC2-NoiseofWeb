@@ -23,14 +23,14 @@ def run():
     parser = argparse.ArgumentParser(fromfile_prefix_chars="@")
 
     parser.add_argument(
-        "--data_path", default="/data/NCR-data/data", help="path to datasets"
+        "--data_path", default="data/", help="path to datasets"
     )
     parser.add_argument(
-        "--data_name", default="f30k_precomp", help="{coco,f30k,cc152k}_precomp"
+        "--data_name", default="f30k_precomp", help="{coco,f30k,cc152k,now100k_precomp}_precomp"
     )
     parser.add_argument(
         "--vocab_path",
-        default="/data/NCR-data/vocab",
+        default="data/vocab",
         help="Path to saved vocabulary json files.",
     )
 
@@ -172,7 +172,7 @@ def run():
             opt.output_dir, opt.data_name + "_" + str(opt.noise_ratio) + ".npy"
         )
 
-    if opt.data_name in ["cc152k_precomp", "h5100k_precomp"]:
+    if opt.data_name in ["cc152k_precomp", "now100k_precomp"]:
         opt.noise_ratio = 0
         opt.noise_file = ""
 

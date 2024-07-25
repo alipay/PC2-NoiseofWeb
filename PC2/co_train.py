@@ -137,9 +137,9 @@ def main(gpu, ngpus_per_node, opt):
                                 world_size=opt.world_size, rank=opt.rank)
     # load Vocabulary Wrapper
     print("load and process dataset ...")
-    if opt.data_name == "h5100k_precomp":
+    if opt.data_name == "now100k_precomp":
         vocab = None
-        opt.vocab_size = 30047
+        opt.vocab_size = 136130
     else:
         vocab = deserialize_vocab(
             os.path.join(opt.vocab_path, "%s_vocab.json" % opt.data_name)
@@ -172,9 +172,9 @@ def main(gpu, ngpus_per_node, opt):
         split = "testall"
     else:
         split = "test"
-    if opt.data_name == "h5100k_precomp":
+    if opt.data_name == "now100k_precomp":
         vocab = None
-        opt.vocab_size = 30047
+        opt.vocab_size = 136130
     else:
         vocab = deserialize_vocab(
             os.path.join(opt.vocab_path, "%s_vocab.json" % opt.data_name)
@@ -305,7 +305,7 @@ def main(gpu, ngpus_per_node, opt):
         # # Dataset split (labeled, unlabeled)
         # # Dataset split (labeled, unlabeled)
         print("Split dataset ...")
-        eval_function = eval_train_cc if opt.data_name in ["cc152k_precomp", "h5100k_precomp"] else eval_train
+        eval_function = eval_train_cc if opt.data_name in ["cc152k_precomp", "now100k_precomp"] else eval_train
         prob_A, prob_B, pred_A, pred_B, prob_ctt_A, prob_ctt_B, pred_ctt_A, pred_ctt_B, all_loss = eval_function(
             opt,
             model_A,
@@ -645,7 +645,7 @@ def warmup(opt, train_loader, model, epoch, distri_bank):
 
 def validate(opt, val_loader, models=[]):
     # compute the encoding for all the validation images and captions
-    if opt.data_name in ["cc152k_precomp", "h5100k_precomp"]:
+    if opt.data_name in ["cc152k_precomp", "now100k_precomp"]:
         per_captions = 1
     elif opt.data_name in ["coco_precomp", "f30k_precomp"]:
         per_captions = 5

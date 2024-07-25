@@ -93,7 +93,7 @@ def evalrank(model_path, data_path=None, vocab_path=None, data_loader=None, spli
         else:
             split = "test"
         # split = "dev"
-        if opt.data_name != 'h5100k_precomp':
+        if opt.data_name != 'now100k_precomp':
             vocab = deserialize_vocab(
             os.path.join(opt.vocab_path, "%s_vocab.json" % opt.data_name)
             )
@@ -108,7 +108,7 @@ def evalrank(model_path, data_path=None, vocab_path=None, data_loader=None, spli
             captions, images = get_dataset(opt.data_path, opt.data_name, split, vocab)
         data_loader = get_loader(opt.data_name, captions, images, split, opt.batch_size, opt.workers)
 
-    if opt.data_name in ["cc152k_precomp", "h5100k_precomp"]:
+    if opt.data_name in ["cc152k_precomp", "now100k_precomp"]:
         per_captions = 1
     elif opt.data_name in ["coco_precomp", "f30k_precomp"]:
         per_captions = 5
@@ -398,14 +398,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(fromfile_prefix_chars="@")
     parser.add_argument("--gpu", default=None, type=int, help="GPU id to use.")
     parser.add_argument(
-        "--data_path", default="data", help="path to datasets"
+        "--data_path", default="data/", help="path to datasets"
     )
     parser.add_argument(
         "--model_path", default="", help="the path to the loaded models"
     )
     parser.add_argument(
         "--vocab_path",
-        default="/data/NCR-data/vocab",
+        default="data/vocab",
         help="Path to saved vocabulary json files.",
     )
     opt = parser.parse_args()

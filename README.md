@@ -1,9 +1,9 @@
-# $\text{PC}^2$ & Noise of Web
+# PC2 & Noise of Web
 
 
 This repo is the official Pytorch implementation of our paper:
 
-> ***$\text{PC}^2$: Pseudo-Classification Based Pseudo-Captioning for Noisy Correspondence Learning in Cross-Modal Retrieval***  
+> ***PC2: Pseudo-Classification Based Pseudo-Captioning for Noisy Correspondence Learning in Cross-Modal Retrieval***  
 > ***Authors**: Yue Duan, Zhangxuan Gu, Zhenzhe Ying, Lei Qi, Changhua Meng and Yinghuan Shi*
  
  
@@ -54,7 +54,7 @@ We develop a new dataset named **Noise of Web (NoW)** for NCL. It contains 100K 
 
 Please see the code snippet in `co_train.py`, `data.py`, `evaluation.py` and `run.py` containing the `now100k_precomp` string to process the NoW dataset for use in your own code.
 
-## $\text{PC}^2$
+## PC2
 ### Introduction
 
 In the realm of cross-modal retrieval, seamlessly integrating diverse modalities within multimedia remains a formidable challenge, especially given the complexities introduced by *noisy correspondence learning (NCL)*. Such noise often stems from mismatched data pairs, a significant obstacle distinct from traditional noisy labels. This paper introduces Pseudo-Classification based Pseudo-Captioning ($\text{PC}^2$) framework to address this challenge. $\text{PC}^2$ offers a threefold strategy: firstly, it establishes an auxiliary ``pseudo-classification'' task that interprets captions as categorical labels, steering the model to learn image-text semantic similarity through a non-contrastive mechanism. Secondly, unlike prevailing margin-based techniques, capitalizing on $\text{PC}^2$'s pseudo-classification capability, we generate pseudo-captions to provide more informative and tangible supervision for each mismatched pair. Thirdly, the oscillation of pseudo-classification is borrowed to assistant the correction of correspondence.

@@ -1,10 +1,10 @@
-# PC$^2$ & Noise of Web
+# PC2 & Noise of Web
 
 
 This repo is the official Pytorch implementation of our paper:
 
-> ***PC$^2$: Pseudo-Classification Based Pseudo-Captioning for Noisy Correspondence Learning in Cross-Modal Retrieval***  
-> ***Authors**: Yue Duan, Zhangxuan Gu, Zhenzhe Ying, Lei Qi, Changhua Meng and Yinghuan Shi *
+> ***PC2: Pseudo-Classification Based Pseudo-Captioning for Noisy Correspondence Learning in Cross-Modal Retrieval***  
+> ***Authors**: Yue Duan, Zhangxuan Gu, Zhenzhe Ying, Lei Qi, Changhua Meng and Yinghuan Shi*
  
  
 - Quick links: [[arXiv (coming soon)]() | [Published paper (coming soon)]() | [Poster (coming soon)]() | [Zhihu (coming soon)]() | [Code download]() | [Dataset download](https://drive.google.com/file/d/1MsR9GmRDUj4NoeL4xL8TXpes51JnpsrZ/view?usp=drive_link)]
@@ -51,8 +51,8 @@ We develop a new dataset named Noise of Web (NoW) for NCL. It contains 100K webs
 **https://drive.google.com/file/d/1MsR9GmRDUj4NoeL4xL8TXpes51JnpsrZ/view?usp=drive_link**
 
 
-
-## Introduction
+## PC2
+### Introduction
 
 In the realm of cross-modal retrieval, seamlessly integrating diverse modalities within multimedia remains a formidable challenge, especially given the complexities introduced by *noisy correspondence learning (NCL)*. Such noise often stems from mismatched data pairs, a significant obstacle distinct from traditional noisy labels. This paper introduces Pseudo-Classification based Pseudo-Captioning (\pc) framework to address this challenge. \pc offers a threefold strategy: firstly, it establishes an auxiliary ``pseudo-classification'' task that interprets captions as categorical labels, steering the model to learn image-text semantic similarity through a non-contrastive mechanism. Secondly, unlike prevailing margin-based techniques, capitalizing on \pc's pseudo-classification capability, we generate pseudo-captions to provide more informative and tangible supervision for each mismatched pair. Thirdly, the oscillation of pseudo-classification is borrowed to assistant the correction of correspondence.
 
@@ -62,13 +62,15 @@ In the realm of cross-modal retrieval, seamlessly integrating diverse modalities
  
 </div>
 
-## Requirements
-- numpy==1.21.6
-- pandas==1.3.2
-- Pillow==10.0.0
-- scikit_learn==1.3.0
-- torch==1.8.0
-- torchvision==0.9.0
+### Requirements
+- jieba==0.42.1
+- matplotlib==3.4.2
+- nltk==3.8.1
+- numpy==1.22.3
+- scikit_learn==0.24.2
+- scipy==1.6.2
+- torch==2.2.2
+
 ## How to Train
 ### Important Args
 <!-- - `--last`: Set this flag to use the model of $\textrm{PRG}^{\textrm{Last}}$.

@@ -44,7 +44,8 @@ We develop a new dataset named **Noise of Web (NoW)** for NCL. It contains 100K 
 
 ```
 
-*_ids.txt records the serial number of the data in the original 500k dataset. In the future, we may process and make the original dataset public.
+**Please note that since our raw data contains some sensitive business data, we only provide the encoded image features (*_ims.npy) and the token ids of the text tokenized using [Tokenizers](https://github.com/huggingface/tokenizers). Our vocabulary size is set to 60,000. *_ids.txt records the serial number of the data in the original 500k dataset. In the future, we may process and make the original dataset public.**
+
 
 ### Download link
 

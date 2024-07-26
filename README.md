@@ -44,7 +44,7 @@ We develop a new dataset named **Noise of Web (NoW)** for NCL. It contains 100K 
 
 ```
 
-**Please note that since our raw data contains some sensitive business data, we only provide the encoded image features (*_ims.npy) and the token ids of the text tokenized using [Tokenizers](https://github.com/huggingface/tokenizers). Our vocabulary size is set to 60,000. *_ids.txt records the serial number of the data in the original 500k dataset. In the future, we may process and make the original dataset public.**
+Please note that since our raw data contains some sensitive business data, we only provide the **encoded image features** (*_ims.npy) and the **token ids of the text tokenized using [Tokenizers](https://github.com/huggingface/tokenizers)** (*_caps.txt). **Our vocabulary size is set to 60,000**. *_ids.txt records the serial number of the data in the original 500k dataset. In the future, we may process and make the original dataset public.
 
 
 ### Download link
@@ -67,7 +67,6 @@ In the realm of cross-modal retrieval, seamlessly integrating diverse modalities
 </div>
 
 ### Requirements
-- jieba==0.42.1
 - matplotlib==3.4.2
 - nltk==3.8.1
 - numpy==1.22.3
@@ -150,17 +149,17 @@ python ./pc2/run.py --world-size 1 --rank 0 --gpu 0 --workers 8 --warmup_epoch 5
 
 
 ## Resume Training and Evaluation
-If you restart the training from normal checkpoints, please use `--resume --model_path @your_weight_path`.
+- If you restart the training from normal checkpoints, please use `--resume --model_path @your_weight_path`.
 
-If you restart the training from warmup checkpoints, please use `--model_path @your_warmup_weight_path`.
+- If you restart the training from warmup checkpoints, please use `--model_path @your_warmup_weight_path`.
 
-For evaluation, run
+- For evaluation, run
 
-```
-python ./PC2/evaluation.py --data_path @your_data_path --model_path @your_weight_path --gpu @your_gpu_id
-```
-    
-By default, your evaluation process will directly use the dataset name saved in your checkpoint.
+  ```
+  python ./PC2/evaluation.py --data_path @your_data_path --model_path @your_weight_path --gpu @your_gpu_id
+  ```
+      
+  By default, your evaluation process will directly use the dataset name saved in your checkpoint.
 
 
 

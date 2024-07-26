@@ -65,7 +65,6 @@ def encode_data(opt, model, data_loader, log_step=10, logging=print):
             progress.display(i)
 
         del images, captions
-    # return img_embs, cap_embs, cap_lens, image_ids
     return img_embs, cap_embs, cap_lens
 
 
@@ -113,20 +112,6 @@ def evalrank(model_path, data_path=None, vocab_path=None, data_loader=None, spli
     elif opt.data_name in ["coco_precomp", "f30k_precomp"]:
         per_captions = 5
 
-    # # Load Vocabulary Wrapper
-    # print("load and process dataset ...")
-    # vocab = deserialize_vocab(
-    #     os.path.join(opt.vocab_path, "%s_vocab.json" % opt.data_name)
-    # )
-    # opt.vocab_size = len(vocab)
-
-    # if opt.data_name == "cc152k_precomp":
-    #     captions, images, image_ids, raw_captions = get_dataset(
-    #         opt.data_path, opt.data_name, split, vocab, return_id_caps=True
-    #     )
-    # else:
-    #     captions, images = get_dataset(opt.data_path, opt.data_name, split, vocab)
-    # data_loader = get_loader(captions, images, split, opt.batch_size, opt.workers)
 
     # construct model
     model_A = SGRAF(opt)
@@ -409,9 +394,6 @@ if __name__ == "__main__":
         help="Path to saved vocabulary json files.",
     )
     opt = parser.parse_args()
-    # model_path = "/home/renyue/model_best.pth.tar"
-    # data_path = "/data2/xuan/NoW/data/"
-    # vocab_path = "/data2/xuan/NoW/vocab/"
     print(f"loading {opt.model_path}")
     evalrank(
         opt.model_path,

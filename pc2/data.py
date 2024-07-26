@@ -84,11 +84,6 @@ class PrecompDataset(data.Dataset):
                 self.probability = [probability[i] for i in split_idx]
                 self.ctt_label = [ctt_pred[i].astype(int) for i in split_idx]
                 self.ctt_probability = [ctt_probability[i] for i in split_idx]
-                # split_idx = np.arange(len(pred))
-                # self.label = pred.astype(int) 
-                # self.probability = probability
-                # self.ctt_label = ctt_pred.astype(int)
-                # self.ctt_probability = ctt_probability
 
             elif self.mode == "unlabeled":
                 split_idx = (1 - pred).nonzero()[0]
@@ -156,12 +151,6 @@ def collate_fn(data):
         # Merge
         ctt_prob = torch.stack(ctt_prob, 0)
 
-    # elif len(data[0]) == 6:
-    #     images, captions, ids, labels, prob, _labels = zip(*data)
-    #     # Merge
-    #     labels = torch.stack(labels, 0).long()
-    #     # Merge
-    #     prob = torch.stack(prob, 0)
 
     elif len(data[0]) == 6:
         images, captions, ids, ids_ori, _labels, _ = zip(*data)

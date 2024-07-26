@@ -481,14 +481,9 @@ class ContrastiveLoss(nn.Module):
         elif soft_margin == "sin":
             s = torch.sin(math.pi * labels - math.pi / 2) / 2 + 1 / 2
             margin = self.margin * s
-        # import pdb
-        # pdb.set_trace()
         # compare every diagonal score to scores in its column: caption retrieval
         cost_s = (margin + scores - d1).clamp(min=1e-8)
-        # (margin + scores - d1).clamp(min=0)
-        # compare every diagonal score to scores in its row: image retrieval
         cost_im = (margin + scores - d2).clamp(min=1e-8)
-        # (margin + scores - d2).clamp(min=0)
 
         # clear diagonals
         mask = torch.eye(scores.size(0)) > 0.5
@@ -599,7 +594,10 @@ class SGRAF(object):
 
         self.img_pro_head = Projection_Head(input_size=36*1024, output_size=opt.proj_dim)
         # self.txt_pro_head = Projection_Head(input_size=30720)
-
+        if not torch.cuda.is_available():
+            raise Exception('ONLY GPU TRAINING IS SUPPORTED')
+        else:
+            cudnn.benchmark = True
         if not torch.cuda.is_available():
             raise Exception('ONLY GPU TRAINING IS SUPPORTED')
         elif opt.distributed:
@@ -642,35 +640,7 @@ class SGRAF(object):
             # model.train_model = torch.nn.DataParallel(model.train_model).cuda()
             # model.eval_model = torch.nn.DataParallel(model.eval_model).cuda()
             pass
-
-        # if torch.cuda.is_available():
-        #     if opt.gpu is not None:
-        #         torch.cuda.set_device(opt.gpu)
-        #         self.img_enc.cuda(opt.gpu)
-        #         self.txt_enc.cuda(opt.gpu)
-        #         self.sim_enc.cuda(opt.gpu)
-        #         self.img_pro_head.cuda(opt.gpu)
-        #     elif opt.distributed:
-        #         self.img_enc.cuda()
-        #         self.img_enc = torch.nn.parallel.DistributedDataParallel(self.img_enc)
-        #         self.txt_enc.cuda()
-        #         self.txt_enc = torch.nn.parallel.DistributedDataParallel(self.txt_enc)
-        #         self.sim_enc.cuda()
-        #         self.sim_enc = torch.nn.parallel.DistributedDataParallel(self.sim_enc)
-        #         self.img_pro_head.cuda()
-        #         self.img_pro_head = torch.nn.parallel.DistributedDataParallel(self.img_pro_head)
-        #     else:
-        #         self.img_enc = torch.nn.DataParallel(self.img_enc).cuda()
-        #         self.txt_enc = torch.nn.DataParallel(self.txt_enc).cuda()
-        #         self.sim_enc = torch.nn.DataParallel(self.sim_enc).cuda()
-        #         self.img_pro_head = torch.nn.DataParallel(self.img_pro_head).cuda()
-            # self.img_enc.cuda()
-            # self.txt_enc.cuda()
-            # self.sim_enc.cuda()
-            # self.img_pro_head.cuda()
-
-            # self.txt_pro_head.cuda()
-            cudnn.benchmark = True
+            
 
         # Loss and Optimizer
         self.criterion = ContrastiveLoss(margin=opt.margin)
@@ -679,7 +649,6 @@ class SGRAF(object):
         params += list(self.img_enc.parameters())
         params += list(self.sim_enc.parameters())
         params += list(self.img_pro_head.parameters())
-        # params += list(self.txt_pro_head.parameters())
         self.params = params
 
         self.optimizer = torch.optim.Adam(params, lr=opt.learning_rate)
@@ -691,7 +660,6 @@ class SGRAF(object):
             self.txt_enc.state_dict(),
             self.sim_enc.state_dict(),
             self.img_pro_head.state_dict(),
-            # self.txt_pro_head.state_dict(),
         ]
         return state_dict
 
@@ -700,7 +668,6 @@ class SGRAF(object):
         self.txt_enc.load_state_dict(state_dict[1])
         self.sim_enc.load_state_dict(state_dict[2])
         self.img_pro_head.load_state_dict(state_dict[3])
-        # self.txt_pro_head.load_state_dict(state_dict[4])
 
     def train_start(self):
         """switch to train mode"""
@@ -708,7 +675,6 @@ class SGRAF(object):
         self.txt_enc.train()
         self.sim_enc.train()
         self.img_pro_head.train()
-        # self.txt_pro_head.train()
 
     def val_start(self):
         """switch to evaluate mode"""
@@ -716,7 +682,6 @@ class SGRAF(object):
         self.txt_enc.eval()
         self.sim_enc.eval()
         self.img_pro_head.eval()
-        # self.txt_pro_head.eval()
 
 
     def forward_emb(self, opt, images, captions, lengths):
@@ -779,7 +744,6 @@ class SGRAF(object):
             cap_embs_pooled = cap_embs
         txt_logits = self.img_pro_head(cap_embs_pooled.reshape(cap_embs_pooled.size(0),-1))
 
-        # txt_logits = self.txt_pro_head(cap_embs.view(cap_embs.size(0),-1))
 
         if mode=='ulb_train':
             img_embs_lb, cap_embs_lb, cap_lens_lb = self.forward_emb(images_ulb_train, captions_ulb_train, lengths_ulb_train)
@@ -802,43 +766,11 @@ class SGRAF(object):
             tmp = []
             
             for i in range(max_idx.size(0)):
-                # current_idx = max_idx[i]      
-                     
-                # same_idx = torch.nonzero(max_idx_lb == current_idx)
-                # same_img_embs_lb = img_embs_lb[same_idx.squeeze()]
-                # same_cap_embs_lb = cap_embs_lb[same_idx.squeeze()]
-                # same_cap_lens_lb = torch.tensor(cap_lens_lb)[same_idx.squeeze().cpu()]
-                # if same_idx.numel() == 0:
-                #     max_probs[i] = labels[i]
-                #     continue
-                # elif same_idx.numel() == 1:
-                #     same_img_embs_lb = same_img_embs_lb.unsqueeze(0)
-                #     same_cap_embs_lb = same_cap_embs_lb.unsqueeze(0)
-                #     same_cap_lens_lb = same_cap_lens_lb.unsqueeze(0)
-
-                # cos_sim = nn.functional.cosine_similarity(img_embs[i].view(1, -1), same_img_embs_lb.view(same_img_embs_lb.size(0),-1), dim=-1)
-                # max_sim_idx = torch.argmax(cos_sim)
-                # max_sim_cap_embs_lb = same_cap_embs_lb[max_sim_idx]
                 current_p = pseudo_label[i]
                 cos_sim = nn.functional.cosine_similarity(current_p.view(1, -1), pseudo_label_lb.view(pseudo_label_lb.size(0),-1), dim=-1)
 
                 max_sim_idx = torch.argmax(cos_sim)
                 max_sim_cap_embs_lb = cap_embs_lb[max_sim_idx]
-                # with open(f"res_{epoch}.txt", "a") as file:
-                #     file.write(str(cos_sim[max_sim_idx].cpu().detach().numpy().tolist())+',' +str(ids_ori[i])+', '+str(ids_ori_ulb_train[max_sim_idx])+'\n')
-                # with open(f"cap1_{epoch}.txt", "a") as file:
-                #     for element in str(captions[i].cpu().detach().numpy().tolist()):
-                #         file.write(element + "\n")
-                # with open(f"cap2_{epoch}.txt", "a") as file:
-                #     for element in str(captions_ulb_train[max_sim_idx].cpu().detach().numpy().tolist()):
-                #         file.write(element + "\n")
-
-                # k = 5
-                # top_k_sim_idx = torch.topk(cos_sim, k).indices
-                # top_k_cap_embs_lb = cap_embs_lb[top_k_sim_idx]
-                # weights = cos_sim[top_k_sim_idx]
-                # weights = weights / torch.sum(weights)
-                # max_sim_cap_embs_lb = torch.sum(top_k_cap_embs_lb * weights.unsqueeze(1).unsqueeze(2), dim=0)
 
                 fixed_L = max(lengths)
                 if max(lengths_ulb_train) > fixed_L:
@@ -851,22 +783,13 @@ class SGRAF(object):
                     cap_embs_pooled = x.transpose(0, 1)
                 else:
                     cap_embs_pooled = max_sim_cap_embs_lb
-                # print(f'same_idx: {same_idx}, same_cap_embs_lb: {same_cap_embs_lb.mean()}, cap_embs_pooled {cap_embs_pooled.mean()}')
                 cap_embs[i] = 1e-8*cap_embs[i].clone() + cap_embs_pooled.clone()
-                # cap_lens_tmp[i] = same_cap_lens_lb[max_sim_idx].cpu().numpy()
                 cap_lens_tmp[i] = torch.tensor(cap_lens_lb)[max_sim_idx]
-                # cap_lens_tmp[i] = torch.max(torch.tensor(cap_lens_lb)[top_k_sim_idx.cpu().numpy()])
                 tmp.append(cap_embs_pooled.clone())
                 labels[i] = cos_sim[max_sim_idx]
-                # labels[i] = torch.mean(weights)
-            # print(tmp)
             filtered_indices = torch.where(labels < 0.5)
             labels[filtered_indices] = 0
-        # print(images.mean(),captions)
-        # print(f'img_embs: {img_embs.mean()}, cap_embs: {cap_embs.mean()}')
         sims = self.forward_sim(img_embs, cap_embs, cap_lens_tmp)
-        # sims = self.forward_sim(img_embs, cap_embs, cap_lens)
-        # print('sim: ', sims)
 
         
         # measure accuracy and record loss
@@ -888,7 +811,6 @@ class SGRAF(object):
                 if mode=='warmup' or mode=='warmup_sele':
                     for i in range(len(ids)):
                         distri_bank[ids[i]] = pseudo_label_img[i].detach().cpu().numpy()
-            # max_probs, max_idx = torch.max(pseudo_label, dim=-1)
             ce_loss_img, en_loss_cap, en_loss_img = self.criterion_proj(img_logits, pseudo_label_cap, use_hard_labels=True, reduction='mean')
             ce_loss_cap, _, _ = self.criterion_proj(txt_logits, pseudo_label_img, use_hard_labels=True, reduction='mean')       
             loss = triplet_loss + ce_loss_img  - self.lambda_en *  en_loss_img
@@ -902,15 +824,7 @@ class SGRAF(object):
             return torch.softmax(img_logits, dim=-1)
 
         # compute gradient and do SGD step
-        # print(loss)
-
-        
-        # torch.autograd.set_detect_anomaly(True)
-        # with torch.autograd.detect_anomaly():
-            # import pdb
-            # pdb.set_trace()
         loss.backward()
-        # for param in self.img_enc.parameters(): print(param)
         if self.grad_clip > 0:
             clip_grad_norm_(self.params, self.grad_clip)
         self.optimizer.step()

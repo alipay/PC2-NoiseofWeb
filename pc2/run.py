@@ -178,12 +178,7 @@ def run():
 
     print("\n*-------- Experiment Config --------*")
     print(opt)
-
-    # CUDA env
-    # os.environ["CUDA_VISIBLE_DEVICES"] = opt.gpu
-    # os.environ["CUDA_VISIBLE_DEVICES"] = '2,3'
     
-
     # set random seed
     random.seed(opt.seed)
     np.random.seed(opt.seed)
@@ -217,19 +212,6 @@ def run():
         mp.spawn(main, nprocs=ngpus_per_node, args=(ngpus_per_node, opt)) 
     else:
         main(opt.gpu, ngpus_per_node, opt)
-
-    # print("\n*-------- Testing --------*")
-    # if opt.data_name == "coco_precomp":
-    #     print("5 fold validation")
-    #     evalrank(
-    #         os.path.join(opt.output_dir, "model_best.pth.tar"),
-    #         split="testall",
-    #         fold5=True,
-    #     )
-    #     print("full validation")
-    #     evalrank(os.path.join(opt.output_dir, "model_best.pth.tar"), split="testall")
-    # else:
-    #     evalrank(os.path.join(opt.output_dir, "model_best.pth.tar"), split="test")
 
 
 if __name__ == "__main__":

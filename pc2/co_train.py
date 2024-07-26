@@ -224,8 +224,6 @@ def main(gpu, ngpus_per_node, opt):
             if opt.po_dir=="":
                 opt.po_dir = checkpoint["opt"].output_dir
             if opt.resume:
-                # bank_name_A = "distri_bank_A.pkl"
-                # bank_name_B = "distri_bank_B.pkl"
                 bank_name_A = "warmup_distri_bank_A.pkl"
                 bank_name_B = "warmup_distri_bank_B.pkl"
             else:
@@ -289,12 +287,7 @@ def main(gpu, ngpus_per_node, opt):
     all_loss = [[], []]
     if not opt.resume:
         model_A.optimizer = torch.optim.Adam(model_A.params, lr=opt.learning_rate)
-        model_B.optimizer = torch.optim.Adam(model_B.params, lr=opt.learning_rate)
-        # print("=> resume distribution bank from '{}'".format(opt.output_dir))
-        # with open(os.path.join(opt.output_dir, 'warmup_distri_bank_A.pkl'), 'rb') as f:
-        #     distri_bank_A = pickle.load(f)
-        # with open(os.path.join(opt.output_dir, 'warmup_distri_bank_B.pkl'), 'rb') as f:
-        #     distri_bank_B = pickle.load(f)  
+        model_B.optimizer = torch.optim.Adam(model_B.params, lr=opt.learning_rate) 
     
     print("\n* Co-training")
     # Train the Model
@@ -324,9 +317,6 @@ def main(gpu, ngpus_per_node, opt):
             opt.noise_file,
             opt.output_dir,
         )
-
-        # pred_A = split_prob(prob_A, opt.p_threshold)
-        # pred_B = split_prob(prob_B, opt.p_threshold)
 
         print("\nModel A training ...")
         # train model_A
@@ -430,17 +420,12 @@ def train(opt, net, net2, distri_bank, labeled_trainloader, unlabeled_trainloade
     en_losses_img_l = AverageMeter("en_losses_img_l", ":.4e")
     en_losses_cap_l = AverageMeter("en_losses_cap_l", ":.4e")
     triplet_losses_u = AverageMeter("triplet_losses_u", ":.4e")
-    # ce_losses_img_u = AverageMeter("ce_losses_img_u", ":.4e")
-    # ce_losses_cap_u = AverageMeter("ce_losses_cap_u", ":.4e")
-    # en_losses_img_u = AverageMeter("en_losses_img_u", ":.4e")
-    # en_losses_cap_u = AverageMeter("en_losses_cap_u", ":.4e")
     batch_time = AverageMeter("batch", ":6.3f")
     data_time = AverageMeter("data", ":6.3f")
     progress = ProgressMeter(
         len(labeled_trainloader),
         [batch_time, data_time, triplet_losses_l, ce_losses_img_l, ce_losses_cap_l, en_losses_img_l, en_losses_cap_l, 
          triplet_losses_u],
-        #  , ce_losses_img_u, ce_losses_cap_u, en_losses_img_u, en_losses_cap_u],
         prefix="Training Step",
     )
 
@@ -501,30 +486,15 @@ def train(opt, net, net2, distri_bank, labeled_trainloader, unlabeled_trainloade
         # label refinement
         with torch.no_grad():
             net.val_start()
-            # labeled data
-            # pl = net.predict(batch_images_l, batch_text_l, batch_lengths_l)
             ptl = batch_prob_l * batch_labels_l + (1 - batch_prob_l) * batch_ctt_prob_l * batch_ctt_labels_l
-            # ptl = batch_prob_l * batch_labels_l 
-            # ptl = batch_prob_l * batch_labels_l + (1 - batch_prob_l) * pl
             targets_l = ptl.detach()
             pred_labels_l.append(ptl.cpu().numpy())
-
-        #     # unlabeled data
-        #     pu1 = net.predict(batch_images_u, batch_text_u, batch_lengths_u)
-        #     pu2 = net2.predict(batch_images_u, batch_text_u, batch_lengths_u)
-        #     ptu = (pu1 + pu2) / 2
-        #     targets_u = ptu.detach()
-        #     targets_u = targets_u.view(-1, 1)
-        #     pred_labels_u.append(ptu.cpu().numpy())
-        # targets_l = torch.ones_like(batch_prob_l)
         targets_u = torch.ones(batch_images_u.size(0)).cuda(opt.gpu)
 
         # drop last batch if only one sample (batch normalization require)
         if batch_images_l.size(0) == 1 or batch_images_u.size(0) == 1:
             break
         net.train_start()
-        # train with labeled + unlabeled data  exponential or linear
-        # print('epoch ',i)
         triplet_loss_l, ce_loss_img_l, ce_loss_cap_l, en_loss_img_l, en_loss_cap_l = net.train(
             opt,
             batch_images_l,
@@ -539,23 +509,6 @@ def train(opt, net, net2, distri_bank, labeled_trainloader, unlabeled_trainloade
             soft_margin=opt.soft_margin,
             mode="lb_train",
         )
-        # triplet_loss_u = net.train(
-        #         batch_images_u,
-        #         batch_text_u,
-        #         batch_lengths_u,
-        #         batch_ids_u,
-        #         distri_bank,
-        #         epoch=epoch,
-        #         labels=targets_u,
-        #         hard_negative=True,
-        #         soft_margin=opt.soft_margin,
-        #         mode="ulb_train",
-        #         images_ulb_train=batch_images_l,
-        #         captions_ulb_train=batch_text_l,
-        #         lengths_ulb_train=batch_lengths_l,
-        #         ids_ulb_train=batch_ids_l
-        #     )
-        # if epoch < (opt.num_epochs // 2):
         if epoch < opt.warmup_epoch_2:
             triplet_loss_u = 0
         else:
@@ -579,18 +532,13 @@ def train(opt, net, net2, distri_bank, labeled_trainloader, unlabeled_trainloade
                 ids_ori_ulb_train=batch_ids_ori_l
             )
 
-        # loss = loss_l + loss_u
-        # losses.update(loss, batch_images_l.size(0) + batch_images_u.size(0))
+
         triplet_losses_l.update(triplet_loss_l, batch_images_l.size(0))
         ce_losses_img_l.update(ce_loss_img_l, batch_images_l.size(0))
         ce_losses_cap_l.update(ce_loss_cap_l, batch_images_l.size(0))
         en_losses_img_l.update(en_loss_img_l, batch_images_l.size(0))
         en_losses_cap_l.update(en_loss_cap_l, batch_images_l.size(0))
         triplet_losses_u.update(triplet_loss_u, batch_images_u.size(0))
-        # ce_losses_img_u.update(ce_loss_img_u, batch_images_u.size(0))
-        # ce_losses_cap_u.update(ce_loss_cap_u, batch_images_u.size(0))
-        # en_losses_img_u.update(en_loss_img_u, batch_images_u.size(0))
-        # en_losses_cap_u.update(en_loss_cap_u, batch_images_u.size(0))
 
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -605,7 +553,6 @@ def train(opt, net, net2, distri_bank, labeled_trainloader, unlabeled_trainloade
 
 def warmup(opt, train_loader, model, epoch, distri_bank):
     # average meters to record the training statistics
-    # losses = AverageMeter("loss", ":.4e")
     triplet_losses_l = AverageMeter("triplet_losses_l", ":.4e")
     ce_losses_img_l = AverageMeter("ce_losses_img_l", ":.4e")
     ce_losses_cap_l = AverageMeter("ce_losses_cap_l", ":.4e")
@@ -634,7 +581,6 @@ def warmup(opt, train_loader, model, epoch, distri_bank):
         ce_losses_cap_l.update(ce_loss_cap_l, images.size(0))
         en_losses_img_l.update(en_loss_img_l, images.size(0))
         en_losses_cap_l.update(en_loss_cap_l, images.size(0))
-        # losses.update(loss, images.size(0))
 
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -644,8 +590,6 @@ def warmup(opt, train_loader, model, epoch, distri_bank):
             current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
             print(current_time, end=' ')
             progress.display(i)
-        # if i > 100:
-        #     break
 
 
 def validate(opt, val_loader, models=[]):
@@ -665,7 +609,6 @@ def validate(opt, val_loader, models=[]):
             opt, models[ind], val_loader, opt.log_step
         )
 
-        # clear duplicate 5*images and keep 1*images FIXME
         img_embs = np.array(
             [img_embs[i] for i in range(0, len(img_embs), per_captions)]
         )
@@ -763,18 +706,9 @@ def eval_train(
                     losses_B_clean.append(loss_B[b])
 
                 if ids[b] in distri_bank_key_A:
-                    # losses_A[ids[b]] = nn.functional.cosine_similarity(distri_bank_A[ids[b]], pseudo_label_A[b], dim=-1)
                     ctt_A[ids[b]] = F.kl_div(torch.from_numpy(distri_bank_A[ids[b]]).log(), pseudo_label_A[b], reduction='sum')
-                    # losses_A[ids[b]] = alpha_divergence(distri_bank_A[ids[b]], pseudo_label_A[b], -torch.sum(distri_bank_A[ids[b]] * torch.log(distri_bank_A[ids[b]])))
-                    # losses_A[ids[b]] = wasserstein_distance(distri_bank_A[ids[b]], pseudo_label_A[b].cpu().numpy())
                 if ids[b] in distri_bank_key_B:
-                    # losses_B[ids[b]] = nn.functional.cosine_similarity(distri_bank_B[ids[b]], pseudo_label_B[b], dim=-1)
                     ctt_B[ids[b]] = F.kl_div(torch.from_numpy(distri_bank_B[ids[b]]).log(), pseudo_label_B[b], reduction='sum')
-                    # losses_B[ids[b]] = alpha_divergence(distri_bank_B[ids[b]], pseudo_label_B[b], -torch.sum(distri_bank_B[ids[b]] * torch.log(distri_bank_B[ids[b]])))
-                    # losses_B[ids[b]] = wasserstein_distance(distri_bank_B[ids[b]], pseudo_label_B[b].cpu().numpy())
-            # ctt_A = ctt_A.numpy()
-            # ctt_B = ctt_B.numpy()
-            # for b in range(images.size(0)):  
                 if ids[b] in noise_idx:
                     ctt_A_noisy.append(ctt_A[ids[b]])
                     ctt_B_noisy.append(ctt_B[ids[b]])
@@ -782,59 +716,18 @@ def eval_train(
                     ctt_A_clean.append(ctt_A[ids[b]])
                     ctt_B_clean.append(ctt_B[ids[b]])
 
-            # pseudo_label_A = model_A.train(images, captions, lengths, ids, distri_bank_A, mode="eval_loss_CTT")
-            # pseudo_label_B = model_B.train(images, captions, lengths, ids, distri_bank_B, mode="eval_loss_CTT")
-            # for b in range(images.size(0)):
-            #     if ids[b] in distri_bank_A.keys():
-            #         # losses_A[ids[b]] = nn.functional.cosine_similarity(distri_bank_A[ids[b]], pseudo_label_A[b], dim=-1)
-            #         ctt_A[ids[b]] = F.kl_div(torch.from_numpy(distri_bank_A[ids[b]]).log(), pseudo_label_A[b].cpu(), reduction='sum')
-            #         # losses_A[ids[b]] = alpha_divergence(distri_bank_A[ids[b]], pseudo_label_A[b], -torch.sum(distri_bank_A[ids[b]] * torch.log(distri_bank_A[ids[b]])))
-            #         # losses_A[ids[b]] = wasserstein_distance(distri_bank_A[ids[b]], pseudo_label_A[b].cpu().numpy())
-            #     if ids[b] in distri_bank_B.keys():
-            #         # losses_B[ids[b]] = nn.functional.cosine_similarity(distri_bank_B[ids[b]], pseudo_label_B[b], dim=-1)
-            #         ctt_B[ids[b]] = F.kl_div(torch.from_numpy(distri_bank_B[ids[b]]).log(), pseudo_label_B[b].cpu(), reduction='sum')
-            #         # losses_B[ids[b]] = alpha_divergence(distri_bank_B[ids[b]], pseudo_label_B[b], -torch.sum(distri_bank_B[ids[b]] * torch.log(distri_bank_B[ids[b]])))
-            #         # losses_B[ids[b]] = wasserstein_distance(distri_bank_B[ids[b]], pseudo_label_B[b].cpu().numpy())
-            #     if ids[b] in noise_idx:
-            #         ctt_A_noisy.append(ctt_A[ids[b]].cpu().numpy())
-            #         ctt_B_noisy.append(ctt_B[ids[b]].cpu().numpy())
-            #     else:
-            #         ctt_A_clean.append(ctt_A[ids[b]].cpu().numpy())
-            #         ctt_B_clean.append(ctt_B[ids[b]].cpu().numpy())
-
             batch_time.update(time.time() - end)
             end = time.time()
             if i % opt.log_step == 0:
                 current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
                 print(current_time, end=' ')
                 progress.display(i)
-        # if i > 200:
-        #     break
 
-    # ids = np.concatenate(total_ids)
     ids = total_ids.numpy()
 
-    # os.makedirs(os.path.join(dir_path, 'losses'), exist_ok=True)
-    # np.save(os.path.join(dir_path, f'losses/losses_A_noisy_{epoch}.npy'), losses_A_noisy)
-    # np.save(os.path.join(dir_path, f'losses/losses_B_noisy_{epoch}.npy'), losses_B_noisy)
-    # np.save(os.path.join(dir_path, f'losses/losses_A_clean_{epoch}.npy'), losses_A_clean)
-    # np.save(os.path.join(dir_path, f'losses/losses_B_clean_{epoch}.npy'), losses_B_clean)
-    # np.save(os.path.join(dir_path, f'losses/losses_A_{epoch}.npy'), losses_A)
-    # np.save(os.path.join(dir_path, f'losses/losses_B_{epoch}.npy'), losses_B)
-
-    # os.makedirs(os.path.join(dir_path, 'ctt'), exist_ok=True)
-    # np.save(os.path.join(dir_path, f'ctt/ctt_A_noisy_{epoch}.npy'), ctt_A_noisy)
-    # np.save(os.path.join(dir_path, f'ctt/ctt_B_noisy_{epoch}.npy'), ctt_B_noisy)
-    # np.save(os.path.join(dir_path, f'ctt/ctt_A_clean_{epoch}.npy'), ctt_A_clean)
-    # np.save(os.path.join(dir_path, f'ctt/ctt_B_clean_{epoch}.npy'), ctt_B_clean)
-    # np.save(os.path.join(dir_path, f'ctt/ctt_A_{epoch}.npy'), ctt_A)
-    # np.save(os.path.join(dir_path, f'ctt/ctt_B_{epoch}.npy'), ctt_B)
-
     losses_A = (losses_A - losses_A.min()) / (losses_A.max() - losses_A.min())
-    # losses_A = z_score_normalization(losses_A.cpu().numpy())
     all_loss[0].append(losses_A)
     losses_B = (losses_B - losses_B.min()) / (losses_B.max() - losses_B.min())
-    # losses_B = z_score_normalization(losses_B.cpu().numpy())
     all_loss[1].append(losses_B)
 
     ctt_A = (ctt_A - ctt_A.min()) / (ctt_A.max() - ctt_A.min())
@@ -843,33 +736,21 @@ def eval_train(
 
     input_loss_A = losses_A.reshape(-1, 1)
     input_loss_B = losses_B.reshape(-1, 1)
-    idx_loss_A = np.where(input_loss_A >= 0.05)[0]
-    idx_ctt_A = np.where(input_loss_A < 0.05)[0]
-    idx_loss_B = np.where(input_loss_B >= 0.05)[0]
-    idx_ctt_B = np.where(input_loss_B < 0.05)[0]
 
     input_ctt_A = ctt_A.reshape(-1, 1)
     input_ctt_B = ctt_B.reshape(-1, 1)
 
-    # input_loss_A = input_loss_A[idx_loss_A]
-    # input_loss_B = input_loss_B[idx_loss_B]
-    # input_ctt_A = input_ctt_A[idx_ctt_A]
-    # input_ctt_B = input_ctt_B[idx_ctt_B]
 
     print("\nFitting GMM of loss...")
     # fit a two-component GMM to the loss
     gmm_A = GaussianMixture(n_components=2, max_iter=10, tol=1e-2, reg_covar=5e-4)
     gmm_A.fit(input_loss_A)
     prob_loss_A = gmm_A.predict_proba(input_loss_A)
-    # gmm_A.fit(input_loss_A)
-    # prob_A = gmm_A.predict_proba(input_loss_A)
     prob_loss_A = prob_loss_A[:, gmm_A.means_.argmin()]
 
     gmm_B = GaussianMixture(n_components=2, max_iter=10, tol=1e-2, reg_covar=5e-4)
     gmm_B.fit(input_loss_B)
     prob_loss_B = gmm_B.predict_proba(input_loss_B)
-    # gmm_B.fit(input_loss_B)
-    # prob_B = gmm_B.predict_proba(input_loss_B)
     prob_loss_B = prob_loss_B[:, gmm_B.means_.argmin()]
 
     pred_loss_A = split_prob(prob_loss_A, opt.p_threshold)
@@ -894,15 +775,6 @@ def eval_train(
     print(f"Selected noisy data A: {p_A}")
     print(f"Selected noisy data B: {p_B}")
 
-
-    # bmm_A = BetaMixture1D(max_iters=10)
-    # bmm_A.fit(input_loss_A.cpu().numpy())
-    # prob_A = bmm_A.posterior(input_loss_A.cpu().numpy(),0)
-
-    # bmm_B = BetaMixture1D(max_iters=10)
-    # bmm_B.fit(input_loss_B.cpu().numpy())
-    # prob_B = bmm_B.posterior(input_loss_B.cpu().numpy(),0)
-
     print("\nFitting GMM of ctt...")
     # fit a two-component GMM to the loss
     gmm_A = GaussianMixture(n_components=2, max_iter=10, tol=1e-2, reg_covar=5e-4)
@@ -917,34 +789,6 @@ def eval_train(
 
     pred_ctt_A = split_prob(prob_ctt_A, opt.p_threshold)
     pred_ctt_B = split_prob(prob_ctt_B, opt.p_threshold)
-
-    # pred_A = np.squeeze(np.empty_like(ctt_A.reshape(-1, 1).cpu().numpy()))
-    # pred_A[idx_loss_A] = pred_loss_A
-    # pred_A[idx_ctt_A] = pred_ctt_A
-    # pred_B = np.squeeze(np.empty_like(ctt_A.reshape(-1, 1).cpu().numpy()))
-    # pred_B[idx_loss_B] = pred_loss_B
-    # pred_B[idx_ctt_B] = pred_ctt_B
-
-    # prob_A = np.squeeze(np.empty_like(ctt_A.reshape(-1, 1).cpu().numpy()))
-    # prob_A[idx_loss_A] = prob_loss_A
-    # prob_A[idx_ctt_A] = prob_ctt_A
-    # prob_B = np.squeeze(np.empty_like(ctt_A.reshape(-1, 1).cpu().numpy()))
-    # prob_B[idx_loss_B] = prob_loss_B
-    # prob_B[idx_ctt_B] = prob_ctt_B
-
-    # sum_A = 0
-    # p_A = 0
-    # sum_B = 0
-    # p_B = 0
-    # for b in range(images.size(0)):
-    #     if pred_A[b]==False:
-    #         p_A = p_A + 1
-    #     if pred_B[b]==False:
-    #         p_B = p_B + 1
-    #     if ids[b] in noise_idx and pred_A[b]==False:
-    #         sum_A = sum_A + 1
-    #     if ids[b] in noise_idx and pred_B[b]==False:
-    #         sum_B = sum_B + 1 
 
     sum_A = 0
     p_A = 0
@@ -966,12 +810,7 @@ def eval_train(
     print(f"Selected noisy data A: {p_A}")
     print(f"Selected noisy data B: {p_B}")
 
-    # if epoch < 20:
-    #     return prob_loss_A, prob_loss_B, pred_loss_A, pred_loss_B, prob_ctt_A, prob_ctt_B, pred_ctt_A, pred_ctt_B, all_loss
-    # else:
-    #     return prob_ctt_A, prob_ctt_B, pred_ctt_A, pred_ctt_B, prob_loss_A, prob_loss_B, pred_loss_A, pred_loss_B, all_loss
     return prob_loss_A, prob_loss_B, pred_loss_A, pred_loss_B, prob_ctt_A, prob_ctt_B, pred_ctt_A, pred_ctt_B, all_loss
-    # return prob_ctt_A, prob_ctt_B, pred_ctt_A, pred_ctt_B, prob_loss_A, prob_loss_B, pred_loss_A, pred_loss_B, all_loss
 
 
 def eval_train_cc(
@@ -1027,8 +866,6 @@ def eval_train_cc(
                 current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
                 print(current_time, end=' ')
                 progress.display(i)
-        # if i > 200:
-        #     break
 
     ids = total_ids.numpy()
 
@@ -1067,15 +904,11 @@ def eval_train_cc(
     gmm_A = GaussianMixture(n_components=2, max_iter=10, tol=1e-2, reg_covar=5e-4)
     gmm_A.fit(input_loss_A)
     prob_loss_A = gmm_A.predict_proba(input_loss_A)
-    # gmm_A.fit(input_loss_A)
-    # prob_A = gmm_A.predict_proba(input_loss_A)
     prob_loss_A = prob_loss_A[:, gmm_A.means_.argmin()]
 
     gmm_B = GaussianMixture(n_components=2, max_iter=10, tol=1e-2, reg_covar=5e-4)
     gmm_B.fit(input_loss_B)
     prob_loss_B = gmm_B.predict_proba(input_loss_B)
-    # gmm_B.fit(input_loss_B)
-    # prob_B = gmm_B.predict_proba(input_loss_B)
     prob_loss_B = prob_loss_B[:, gmm_B.means_.argmin()]
 
     pred_loss_A = split_prob(prob_loss_A, opt.p_threshold)
@@ -1097,13 +930,7 @@ def eval_train_cc(
     pred_ctt_A = split_prob(prob_ctt_A, opt.p_threshold)
     pred_ctt_B = split_prob(prob_ctt_B, opt.p_threshold)
 
-
-    # if epoch < 20:
-    #     return prob_loss_A, prob_loss_B, pred_loss_A, pred_loss_B, prob_ctt_A, prob_ctt_B, pred_ctt_A, pred_ctt_B, all_loss
-    # else:
-    #     return prob_ctt_A, prob_ctt_B, pred_ctt_A, pred_ctt_B, prob_loss_A, prob_loss_B, pred_loss_A, pred_loss_B, all_loss
     return prob_loss_A, prob_loss_B, pred_loss_A, pred_loss_B, prob_ctt_A, prob_ctt_B, pred_ctt_A, pred_ctt_B, all_loss
-    # return prob_ctt_A, prob_ctt_B, pred_ctt_A, pred_ctt_B, prob_loss_A, prob_loss_B, pred_loss_A, pred_loss_B, all_loss
 
 def split_prob(prob, threshld):
     if prob.min() > threshld:
@@ -1112,18 +939,5 @@ def split_prob(prob, threshld):
             "No estimated noisy data. Enforce the 1/100 data with small probability to be unlabeled."
         )
         threshld = np.sort(prob)[len(prob) // 100]
-    # if (np.count_nonzero(prob > threshld) / len(prob)) < 0.4:
-    #     print(
-    #         "Enforce the 40% data with high probability to be labeled."
-    #     )
-    #     threshld = np.percentile(prob, 60)  
-    #     pred = prob >= threshld
-    #     count = np.count_nonzero(pred)
-    #     if count > len(prob) * 0.4:
-    #         indices = np.argsort(prob)[::-1][:int(len(prob) * 0.4)]
-    #         pred = np.zeros_like(prob, dtype=bool)
-    #         pred[indices] = True
-    # else:
-    #     pred = prob > threshld
     pred = prob > threshld
     return pred

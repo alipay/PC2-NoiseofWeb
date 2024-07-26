@@ -216,7 +216,9 @@ def get_dataset(data_path, data_name, data_split, vocab, return_id_caps=False):
             caption = captions[index]
             tokens = caption.split(',')
             caption = []
-            caption.extend([int(token) for token in tokens])
+            caption.append(vocab("<start>"))
+            caption.extend([int(token) for token in tokens if token])
+            caption.append(vocab("<end>"))
             captions_token.append(caption)
     else: 
         for index in range(len(captions)):

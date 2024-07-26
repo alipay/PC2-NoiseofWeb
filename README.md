@@ -1,4 +1,4 @@
-# PC2 & Noise of Web
+# PC2-NoiseofWeb
 
 
 This repo is the official Pytorch implementation of our paper:
@@ -52,7 +52,7 @@ We develop a new dataset named **Noise of Web (NoW)** for NCL. It contains 100K 
 
 ### Usage
 
-Please see the code snippet in `co_train.py`, `data.py`, `evaluation.py` and `run.py` containing the `now100k_precomp` string to process the NoW dataset for use in your own code.
+Please see the code snippet in `co_train.py`, `data.py`, `evaluation.py` and `run.py` containing the `now100k_precomp` string to process the NoW dataset for use in your own code. 
 
 ## PC2
 ### Introduction

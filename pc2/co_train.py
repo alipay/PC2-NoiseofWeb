@@ -138,7 +138,9 @@ def main(gpu, ngpus_per_node, opt):
     # load Vocabulary Wrapper
     print("load and process dataset ...")
     if opt.data_name == "now100k_precomp":
-        vocab = None
+        vocab = deserialize_vocab(
+            os.path.join(opt.vocab_path, "%s_vocab.json" % opt.data_name)
+        )
         opt.vocab_size = 136130
     else:
         vocab = deserialize_vocab(
@@ -173,7 +175,9 @@ def main(gpu, ngpus_per_node, opt):
     else:
         split = "test"
     if opt.data_name == "now100k_precomp":
-        vocab = None
+        vocab = deserialize_vocab(
+            os.path.join(opt.vocab_path, "%s_vocab.json" % opt.data_name)
+        )
         opt.vocab_size = 136130
     else:
         vocab = deserialize_vocab(
@@ -382,7 +386,8 @@ def main(gpu, ngpus_per_node, opt):
                     "opt": opt,
                 },
                 is_best,
-                filename="checkpoint_{}.pth.tar".format(epoch),
+                # filename="checkpoint_{}.pth.tar".format(epoch),
+                filename="checkpoint_best_validattion.pth.tar",
                 prefix=opt.output_dir + "/",
             )
 
@@ -809,21 +814,21 @@ def eval_train(
     # ids = np.concatenate(total_ids)
     ids = total_ids.numpy()
 
-    os.makedirs(os.path.join(dir_path, 'losses'), exist_ok=True)
-    np.save(os.path.join(dir_path, f'losses/losses_A_noisy_{epoch}.npy'), losses_A_noisy)
-    np.save(os.path.join(dir_path, f'losses/losses_B_noisy_{epoch}.npy'), losses_B_noisy)
-    np.save(os.path.join(dir_path, f'losses/losses_A_clean_{epoch}.npy'), losses_A_clean)
-    np.save(os.path.join(dir_path, f'losses/losses_B_clean_{epoch}.npy'), losses_B_clean)
-    np.save(os.path.join(dir_path, f'losses/losses_A_{epoch}.npy'), losses_A)
-    np.save(os.path.join(dir_path, f'losses/losses_B_{epoch}.npy'), losses_B)
+    # os.makedirs(os.path.join(dir_path, 'losses'), exist_ok=True)
+    # np.save(os.path.join(dir_path, f'losses/losses_A_noisy_{epoch}.npy'), losses_A_noisy)
+    # np.save(os.path.join(dir_path, f'losses/losses_B_noisy_{epoch}.npy'), losses_B_noisy)
+    # np.save(os.path.join(dir_path, f'losses/losses_A_clean_{epoch}.npy'), losses_A_clean)
+    # np.save(os.path.join(dir_path, f'losses/losses_B_clean_{epoch}.npy'), losses_B_clean)
+    # np.save(os.path.join(dir_path, f'losses/losses_A_{epoch}.npy'), losses_A)
+    # np.save(os.path.join(dir_path, f'losses/losses_B_{epoch}.npy'), losses_B)
 
-    os.makedirs(os.path.join(dir_path, 'ctt'), exist_ok=True)
-    np.save(os.path.join(dir_path, f'ctt/ctt_A_noisy_{epoch}.npy'), ctt_A_noisy)
-    np.save(os.path.join(dir_path, f'ctt/ctt_B_noisy_{epoch}.npy'), ctt_B_noisy)
-    np.save(os.path.join(dir_path, f'ctt/ctt_A_clean_{epoch}.npy'), ctt_A_clean)
-    np.save(os.path.join(dir_path, f'ctt/ctt_B_clean_{epoch}.npy'), ctt_B_clean)
-    np.save(os.path.join(dir_path, f'ctt/ctt_A_{epoch}.npy'), ctt_A)
-    np.save(os.path.join(dir_path, f'ctt/ctt_B_{epoch}.npy'), ctt_B)
+    # os.makedirs(os.path.join(dir_path, 'ctt'), exist_ok=True)
+    # np.save(os.path.join(dir_path, f'ctt/ctt_A_noisy_{epoch}.npy'), ctt_A_noisy)
+    # np.save(os.path.join(dir_path, f'ctt/ctt_B_noisy_{epoch}.npy'), ctt_B_noisy)
+    # np.save(os.path.join(dir_path, f'ctt/ctt_A_clean_{epoch}.npy'), ctt_A_clean)
+    # np.save(os.path.join(dir_path, f'ctt/ctt_B_clean_{epoch}.npy'), ctt_B_clean)
+    # np.save(os.path.join(dir_path, f'ctt/ctt_A_{epoch}.npy'), ctt_A)
+    # np.save(os.path.join(dir_path, f'ctt/ctt_B_{epoch}.npy'), ctt_B)
 
     losses_A = (losses_A - losses_A.min()) / (losses_A.max() - losses_A.min())
     # losses_A = z_score_normalization(losses_A.cpu().numpy())

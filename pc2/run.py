@@ -23,7 +23,7 @@ def run():
     parser = argparse.ArgumentParser(fromfile_prefix_chars="@")
 
     parser.add_argument(
-        "--data_path", default="data/", help="path to datasets"
+        "--data_path", default="data/", help="Path to datasets."
     )
     parser.add_argument(
         "--data_name", default="f30k_precomp", help="{coco,f30k,cc152k,now100k_precomp}_precomp"
@@ -132,7 +132,7 @@ def run():
     parser.add_argument("--po_dir", default="", help="The path to PO data for resuming training")
     parser.add_argument("--resume", action="store_true", help="Resume training")
     parser.add_argument(
-        "--p_threshold", default=0.5, type=float, help="clean probability threshold"
+        "--p_threshold", default=0.5, type=float, help="Clean probability threshold."
     )
     parser.add_argument(
         "--soft_margin", default="exponential", help="linear|exponential|sin"
@@ -148,13 +148,13 @@ def run():
     )
     ## args for distributed training (from https://github.com/pytorch/examples/blob/master/imagenet/main.py)
     parser.add_argument('--world-size', default=-1, type=int,
-                        help='number of nodes for distributed training')
+                        help='Number of nodes for distributed training.')
     parser.add_argument('--rank', default=-1, type=int,
                         help='**node rank** for distributed training')
     parser.add_argument('--dist-url', default='tcp://127.0.0.1:10001', type=str,
-                        help='url used to set up distributed training')
+                        help='Url used to set up distributed training.')
     parser.add_argument('--dist-backend', default='nccl', type=str,
-                        help='distributed backend')
+                        help='Distributed backend.')
     parser.add_argument('--multiprocessing-distributed', action='store_true',
                         help='Use multi-processing distributed training to launch '
                              'N processes per node, which has N GPUs. This is the '

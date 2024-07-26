@@ -890,20 +890,12 @@ class SGRAF(object):
                         distri_bank[ids[i]] = pseudo_label_img[i].detach().cpu().numpy()
             # max_probs, max_idx = torch.max(pseudo_label, dim=-1)
             ce_loss_img, en_loss_cap, en_loss_img = self.criterion_proj(img_logits, pseudo_label_cap, use_hard_labels=True, reduction='mean')
-            ce_loss_cap, _, _ = self.criterion_proj(txt_logits, pseudo_label_img, use_hard_labels=True, reduction='mean')
-            if random.random() < 0.001:
-                print('warmup_distri_cap: ', torch.mean(pseudo_label_cap, dim=0))
-                print('warmup_distri_img: ', torch.mean(pseudo_label_img, dim=0))         
-            # loss = triplet_loss + ce_loss_img + ce_loss_cap  - 1 *  en_loss_img - 1 * en_loss_cap
+            ce_loss_cap, _, _ = self.criterion_proj(txt_logits, pseudo_label_img, use_hard_labels=True, reduction='mean')       
             loss = triplet_loss + ce_loss_img  - self.lambda_en *  en_loss_img
-            # print(triplet_loss, ce_loss_img, ce_loss_cap, en_loss_img, en_loss_cap)
-            # loss = triplet_loss
         else:
             loss = triplet_loss
             
         # return per-sample loss
-        # if mode == "eval_loss":
-        #     return loss
         if mode == "eval_loss":
             return triplet_loss, torch.softmax(img_logits, dim=-1)
         if mode == "eval_loss_CTT":

@@ -141,7 +141,7 @@ def main(gpu, ngpus_per_node, opt):
         vocab = deserialize_vocab(
             os.path.join(opt.vocab_path, "%s_vocab.json" % opt.data_name)
         )
-        opt.vocab_size = 136130
+        opt.vocab_size = 30000
     else:
         vocab = deserialize_vocab(
             os.path.join(opt.vocab_path, "%s_vocab.json" % opt.data_name)
@@ -178,7 +178,7 @@ def main(gpu, ngpus_per_node, opt):
         vocab = deserialize_vocab(
             os.path.join(opt.vocab_path, "%s_vocab.json" % opt.data_name)
         )
-        opt.vocab_size = 136130
+        opt.vocab_size = 30000
     else:
         vocab = deserialize_vocab(
             os.path.join(opt.vocab_path, "%s_vocab.json" % opt.data_name)

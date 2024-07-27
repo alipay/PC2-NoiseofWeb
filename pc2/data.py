@@ -220,7 +220,6 @@ def get_dataset(data_path, data_name, data_split, vocab, return_id_caps=False):
             caption.append(vocab("<end>"))
             captions_token.append(caption)
 
-
     # images
     images = np.load(os.path.join(data_path, "%s_ims.npy" % data_split))
     print(

@@ -32,19 +32,22 @@ We develop a new dataset named **Noise of Web (NoW)** for NCL. It contains 100K 
 ```
 
 |-- h5100k_precomp
-|   |-- dev_caps.txt
+|   |-- dev_caps_bpe.txt
+|   |-- dev_caps_bert.txt
 |   |-- dev_ids.txt
 |   |-- dev_ims.npy
-|   |-- test_caps.txt
+|   |-- test_caps_bpe.txt
+|   |-- test_caps_bert.txt
 |   |-- test_ids.txt
 |   |-- test_ims.npy
-|   |-- train_caps.txt
+|   |-- train_caps_bpe.txt
+|   |-- train_caps_bert.txt
 |   |-- train_ids.txt
 |   |-- train_ims.npy
 
 ```
 
-Please note that since our raw data contains some sensitive business data, we only provide the **encoded image features** (\*_ims.npy) and the **token ids of the text tokenized using [Tokenizers](https://github.com/huggingface/tokenizers)** (\*_caps.txt). **Our vocabulary size is set to 60,000**. \*_ids.txt records the serial number of the data in the original 500k dataset. In the future, we may process and make the original dataset public.
+Please note that since our raw data contains some sensitive business data, we only provide the **encoded image features** (\*_ims.npy) and the **token ids of the text tokenized**. For tokenizer, we use both [Tokenizers](https://github.com/huggingface/tokenizers) with [BPE](https://huggingface.co/docs/tokenizers/api/models#tokenizers.models.BPE) to produce \*_caps_bpe.txt and [BertTokenizer](https://huggingface.co/transformers/v3.0.2/model_doc/bert.html#berttokenizer) with [bert-base-multilingual-cased](https://huggingface.co/google-bert/bert-base-multilingual-cased) pre-trained model to produce \*_caps_bert.txt. **Our vocabulary size of BPE tokenizer is 10,000 and that of BertTokenizer is 32702**. \*_ids.txt records the serial number of the data in the original 500k dataset. In the future, we may process and make the original dataset public.
 
 
 ### Download link
@@ -85,6 +88,7 @@ In the realm of cross-modal retrieval, seamlessly integrating diverse modalities
 - `--po_dir` : When `--resume`, use this path to load the PO data for resuming training.
 - `--model_path` : Use this path to load the checkpoint for resuming training when `--resume`, or use this path to load the warmup checkpoint for resuming training without `--resume`.
 - `--data_name {coco,f30k,cc152k,now100k}_precomp` and `--data_path`  : Your dataset name and path.  
+- `--tokenizer {bpe,bert}`: The tokenizer used for NoW dataset.  
 - `--noise_ratio`: Noisy ratio for Flickr30K and MS-COCO.
 - `--noise_file`: Noise file for the feproduction of noise correspondence.
 
@@ -125,12 +129,12 @@ frame #6: clone + 0x3f (0x7f1e1478b61f in /lib/x86_64-linux-gnu/libc.so.6)
 If any friends have insights on the occurrence of this problem, please contact us. At the same time, please rest assured that there will be no problem training with a single GPU (i.e., using ``--gpu`` to specify the GPU id).
 
 ## Examples of Running
-By default, the warmup checkpoint `warmup_model_{}.pth.tar`, best checkpoint `model_best.pth.tar`, epoch checkpoint `checkpoint_{}.pth.tar` and PO data (the pseudo-preditions of pseudo-classification) `distri_bank_{}.pkl` will be saved in `./output_dir`. 
+By default, the warmup checkpoint `warmup_model_{}.pth.tar`, best checkpoint `checkpoint_best_test.pth.tar`, best validattion checkpoint`checkpoint_best_validattion.pth.tar` and PO data (the pseudo-preditions of pseudo-classification) `distri_bank_{}.pkl` will be saved in `./output_dir`. 
 
 ### NoW
 
 ```
-python ./pc2/run.py --world-size 1 --rank 0 --gpu 0 --workers 8 --lr_update 30 --warmup_epoch 10 --warmup_epoch_2 25 --data_name h5100k_precomp --data_path ./data --vocab_path ./data/vocab --output_dir ./output --proj_dim 128 --lambda_en 10 --img_dim 768 
+python ./pc2/run.py --world-size 1 --rank 0 --gpu 0 --workers 8 --lr_update 30 --warmup_epoch 10 --warmup_epoch_2 25 --data_name h5100k_precomp --tokenizer bert --data_path ./data --vocab_path ./data/vocab --output_dir ./output --proj_dim 128 --lambda_en 10 --img_dim 768 
 ```
 
 

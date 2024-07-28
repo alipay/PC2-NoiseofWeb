@@ -61,7 +61,7 @@ def load_config(opt, file_path):
         opt.__dict__ = json.load(f)
 
 
-def save_checkpoint(state, is_best, filename="checkpoint.pth.tar", prefix=""):
+def save_checkpoint(state, filename="checkpoint.pth.tar", prefix=""):
     tries = 15
     error = None
 
@@ -69,8 +69,11 @@ def save_checkpoint(state, is_best, filename="checkpoint.pth.tar", prefix=""):
     while tries:
         try:
             torch.save(state, prefix + filename)
-            if is_best:
-                shutil.copyfile(prefix + filename, prefix + "model_best.pth.tar")
+            # if is_best:
+            #     # shutil.copyfile(prefix + filename, prefix + "checkpoint_best_test.pth.pth.tar")
+            #     torch.save(state, prefix + "checkpoint_best_test.pth.pth.tar")
+            # else:
+            #     torch.save(state, prefix + filename)
         except IOError as e:
             error = e
             tries -= 1

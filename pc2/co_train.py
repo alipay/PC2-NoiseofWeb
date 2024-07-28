@@ -213,7 +213,7 @@ def main(gpu, ngpus_per_node, opt):
     # Warmup  
     if opt.model_path:
         print(opt.batch_size)
-        print("\nResuming...")
+        print("\nResuming ...")
         if os.path.isfile(opt.model_path):
             checkpoint = torch.load(opt.model_path, map_location=torch.device('cuda:{}'.format(opt.gpu)))
             model_A.load_state_dict(checkpoint["model_A"])

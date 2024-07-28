@@ -601,10 +601,10 @@ class SGRAF(object):
         if not torch.cuda.is_available():
             raise Exception('ONLY GPU TRAINING IS SUPPORTED')
         elif opt.distributed:
-            print('model: ', opt.gpu)
             if opt.gpu is not None:
                 torch.cuda.set_device(opt.gpu)            
                 self.img_enc.cuda(opt.gpu)
+                opt.batch_size = int(opt.batch_size / torch.cuda.device_count())
                 self.img_enc = torch.nn.parallel.DistributedDataParallel(self.img_enc,
                                                                             device_ids=[opt.gpu])
                 self.txt_enc.cuda(opt.gpu)
@@ -630,7 +630,6 @@ class SGRAF(object):
                 self.img_pro_head = torch.nn.parallel.DistributedDataParallel(self.img_pro_head)
                 
         elif opt.gpu is not None:
-            print(opt.gpu)
             torch.cuda.set_device(opt.gpu)
             self.img_enc.cuda(opt.gpu)
             self.txt_enc.cuda(opt.gpu)
@@ -746,7 +745,7 @@ class SGRAF(object):
 
 
         if mode=='ulb_train':
-            img_embs_lb, cap_embs_lb, cap_lens_lb = self.forward_emb(images_ulb_train, captions_ulb_train, lengths_ulb_train)
+            img_embs_lb, cap_embs_lb, cap_lens_lb = self.forward_emb(opt, images_ulb_train, captions_ulb_train, lengths_ulb_train)
             img_logits_lb = self.img_pro_head(img_embs_lb.view(img_embs_lb.size(0),-1))
             # txt_logits_lb = self.txt_pro_head(cap_embs_lb.view(cap_embs_lb.size(0),-1))
             pseudo_label_lb = torch.softmax(img_logits_lb, dim=-1)
@@ -832,12 +831,12 @@ class SGRAF(object):
             return triplet_loss.item(), ce_loss_img.item(), ce_loss_cap.item(), -en_loss_img.item(), -en_loss_cap.item()
         else:
             return triplet_loss.item()
-    def predict(self, images, captions, lengths):
+    def predict(self, opt, images, captions, lengths):
         """
         predict the given samples
         """
         # compute the embeddings
-        img_embs, cap_embs, cap_lens = self.forward_emb(images, captions, lengths)
+        img_embs, cap_embs, cap_lens = self.forward_emb(opt, images, captions, lengths)
         sims = self.forward_sim(img_embs, cap_embs, cap_lens)
 
         I = self.criterion(sims, mode="predict")

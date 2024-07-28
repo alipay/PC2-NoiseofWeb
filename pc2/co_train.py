@@ -11,6 +11,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.distributed as dist
+from utils import save_config, load_config
 from sklearn.mixture import GaussianMixture
 from datetime import timedelta
 from data import get_loader, get_dataset
@@ -139,9 +140,9 @@ def main(gpu, ngpus_per_node, opt):
     print("load and process dataset ...")
     if opt.data_name == "now100k_precomp":
         vocab = deserialize_vocab(
-            os.path.join(opt.vocab_path, "%s_vocab.json" % opt.data_name)
+            os.path.join(opt.vocab_path, "{}_vocab_{}.json".format(opt.data_name, opt.tokenizer))
         )
-        opt.vocab_size = 30000
+        opt.vocab_size = vocab.idx
     else:
         vocab = deserialize_vocab(
             os.path.join(opt.vocab_path, "%s_vocab.json" % opt.data_name)
@@ -150,9 +151,9 @@ def main(gpu, ngpus_per_node, opt):
 
     # load dataset
     captions_train, images_train = get_dataset(
-        opt.data_path, opt.data_name, "train", vocab
+        opt.data_path, opt.data_name, "train", vocab, opt.tokenizer
     )
-    captions_dev, images_dev = get_dataset(opt.data_path, opt.data_name, "dev", vocab)
+    captions_dev, images_dev = get_dataset(opt.data_path, opt.data_name, "dev", vocab, opt.tokenizer)
 
     # data loader
     noisy_trainloader, data_size, clean_labels = get_loader(
@@ -176,9 +177,9 @@ def main(gpu, ngpus_per_node, opt):
         split = "test"
     if opt.data_name == "now100k_precomp":
         vocab = deserialize_vocab(
-            os.path.join(opt.vocab_path, "%s_vocab.json" % opt.data_name)
+            os.path.join(opt.vocab_path, "{}_vocab_{}.json".format(opt.data_name, opt.tokenizer))
         )
-        opt.vocab_size = 30000
+        opt.vocab_size = vocab.idx
     else:
         vocab = deserialize_vocab(
             os.path.join(opt.vocab_path, "%s_vocab.json" % opt.data_name)
@@ -189,10 +190,10 @@ def main(gpu, ngpus_per_node, opt):
             opt.data_path, opt.data_name, split, vocab, return_id_caps=True
         )
     else:
-        captions, images = get_dataset(opt.data_path, opt.data_name, split, vocab)
+        captions, images = get_dataset(opt.data_path, opt.data_name, split, vocab, opt.tokenizer)
     data_loader_test = get_loader(opt.data_name, captions, images, split, opt.batch_size, opt.workers)
 
-    opt.batch_size = int(opt.batch_size / ngpus_per_node)
+    
     # create models
     model_A = SGRAF(opt)
     model_B = SGRAF(opt)
@@ -209,18 +210,22 @@ def main(gpu, ngpus_per_node, opt):
     distri_bank_A = {}
     distri_bank_B = {}
 
-    # Warmup
-    print("\n* Warmup")
+    # Warmup  
     if opt.model_path:
+        print(opt.batch_size)
+        print("\nResuming...")
         if os.path.isfile(opt.model_path):
-            checkpoint = torch.load(opt.model_path)
+            checkpoint = torch.load(opt.model_path, map_location=torch.device('cuda:{}'.format(opt.gpu)))
             model_A.load_state_dict(checkpoint["model_A"])
             model_B.load_state_dict(checkpoint["model_B"])
-            print(
-                "=> load warmup checkpoint '{}' (epoch {})".format(
-                    opt.model_path, checkpoint["epoch"]
+            if not opt.resume:
+                print(
+                    "=> load warmup checkpoint '{}' (epoch {})".format(
+                        opt.model_path, checkpoint["epoch"]
+                    )
                 )
-            )
+            else:
+                pass
             if opt.po_dir=="":
                 opt.po_dir = checkpoint["opt"].output_dir
             if opt.resume:
@@ -234,10 +239,8 @@ def main(gpu, ngpus_per_node, opt):
                 with open(os.path.join(opt.po_dir, bank_name_A), 'rb') as f:
                     distri_bank_A = pickle.load(f)
                 with open(os.path.join(opt.po_dir, bank_name_B), 'rb') as f:
-                    distri_bank_B = pickle.load(f)
-            print("\nValidattion ...")
+                    distri_bank_B = pickle.load(f)          
             if opt.resume:
-                print(checkpoint.keys())
                 model_A.optimizer.load_state_dict(checkpoint['optimizer_A'])
                 model_B.optimizer.load_state_dict(checkpoint['optimizer_B'])
                 print(
@@ -245,17 +248,28 @@ def main(gpu, ngpus_per_node, opt):
                     opt.model_path, checkpoint["epoch"]
                     )
                 )
+                print(checkpoint.keys())
                 start_epoch = checkpoint["epoch"]
                 # opt = checkpoint["opt"]
-                best_rsum = validate(opt, val_loader, [model_A, model_B])
-                
+                print("\nValidattion ...")
+                best_rsum = validate(opt, val_loader, [model_A, model_B])             
             else:
+                print("\nValidattion ...")
                 validate(opt, val_loader, [model_A, model_B])
         else:
             raise Exception(
                 "=> no checkpoint found at '{}'".format(opt.model_path)
             )
+        print("\n*-------- Experiment Config --------*")
+        print(opt)
+        # save config
+        save_config(opt, os.path.join(opt.output_dir, "config.json"))
     else:
+        print("\n*-------- Experiment Config --------*")
+        print(opt)
+        # save config
+        save_config(opt, os.path.join(opt.output_dir, "config.json"))
+        print("\n* Warmup")
         epoch = 0
         for epoch in range(0, opt.warmup_epoch):
             print("[{}/{}] Warmup model_A".format(epoch + 1, opt.warmup_epoch))
@@ -359,7 +373,22 @@ def main(gpu, ngpus_per_node, opt):
         print("\nValidattion ...")
         # evaluate on validation set
         rsum = validate(opt, val_loader, [model_A, model_B])
-
+        print("\nSaving the latest checkpoint...")
+        save_checkpoint(
+            {
+                "epoch": epoch,
+                "model_A": model_A.state_dict(),
+                "model_B": model_B.state_dict(),
+                "optimizer_A": model_A.optimizer.state_dict(),
+                "optimizer_B": model_B.optimizer.state_dict(),
+                "best_rsum": best_rsum,
+                "opt": opt,
+            },
+            is_best,
+            # filename="checkpoint_{}.pth.tar".format(epoch),
+            filename="checkpoint_latest_validattion.pth.tar",
+            prefix=opt.output_dir + "/",
+        )
         # remember best R@ sum and save checkpoint
         is_best = rsum > best_rsum
         best_rsum = max(rsum, best_rsum)
@@ -385,14 +414,14 @@ def main(gpu, ngpus_per_node, opt):
             if opt.data_name == "coco_precomp":
                 print("5 fold validation")
                 rsum_test_5fold = evalrank(
-                    os.path.join(opt.output_dir, "model_best.pth.tar"),
+                    os.path.join(opt.output_dir, "checkpoint_best_test.pth.tar"),
                     # split="testall",
                     data_loader=data_loader_test,
                     fold5=True,
                 )
                 print("full validation")
-                # rsum_test_full = evalrank(os.path.join(opt.output_dir, "model_best.pth.tar"), split="testall")
-                rsum_test_full = evalrank(os.path.join(opt.output_dir, "model_best.pth.tar"), data_loader=data_loader_test)
+                # rsum_test_full = evalrank(os.path.join(opt.output_dir, "checkpoint_best_test.pth.tar"), split="testall")
+                rsum_test_full = evalrank(os.path.join(opt.output_dir, "checkpoint_best_test.pth.tar"), data_loader=data_loader_test)
                 is_best = rsum_test_5fold > best_rsum_test_5fold
                 if is_best:
                     best_rsum_test_5fold = rsum_test_5fold
@@ -402,11 +431,12 @@ def main(gpu, ngpus_per_node, opt):
                     best_rsum_test_full = rsum_test_full
                     print("\nBest testing over full 5K!")
             else:
-                rsum_test = evalrank(os.path.join(opt.output_dir, "model_best.pth.tar"), data_loader=data_loader_test)
+                rsum_test = evalrank(os.path.join(opt.output_dir, "checkpoint_best_test.pth.tar"), data_loader=data_loader_test)
                 is_best = rsum_test > best_rsum_test    
                 if is_best:
                     best_rsum_test = rsum_test
                     print("\nBest testing!")
+            
 
 
 def train(opt, net, net2, distri_bank, labeled_trainloader, unlabeled_trainloader=None, epoch=None):
@@ -775,7 +805,7 @@ def eval_train(
     print(f"Selected noisy data A: {p_A}")
     print(f"Selected noisy data B: {p_B}")
 
-    print("\nFitting GMM of ctt...")
+    print("\nFitting GMM of PO...")
     # fit a two-component GMM to the loss
     gmm_A = GaussianMixture(n_components=2, max_iter=10, tol=1e-2, reg_covar=5e-4)
     gmm_A.fit(input_ctt_A)
@@ -869,13 +899,13 @@ def eval_train_cc(
 
     ids = total_ids.numpy()
 
-    os.makedirs(os.path.join(dir_path, 'losses'), exist_ok=True)
-    np.save(os.path.join(dir_path, f'losses/losses_A_{epoch}.npy'), losses_A)
-    np.save(os.path.join(dir_path, f'losses/losses_B_{epoch}.npy'), losses_B)
+    # os.makedirs(os.path.join(dir_path, 'losses'), exist_ok=True)
+    # np.save(os.path.join(dir_path, f'losses/losses_A_{epoch}.npy'), losses_A)
+    # np.save(os.path.join(dir_path, f'losses/losses_B_{epoch}.npy'), losses_B)
 
-    os.makedirs(os.path.join(dir_path, 'ctt'), exist_ok=True)
-    np.save(os.path.join(dir_path, f'ctt/ctt_A_{epoch}.npy'), ctt_A)
-    np.save(os.path.join(dir_path, f'ctt/ctt_B_{epoch}.npy'), ctt_B)
+    # os.makedirs(os.path.join(dir_path, 'ctt'), exist_ok=True)
+    # np.save(os.path.join(dir_path, f'ctt/ctt_A_{epoch}.npy'), ctt_A)
+    # np.save(os.path.join(dir_path, f'ctt/ctt_B_{epoch}.npy'), ctt_B)
 
     losses_A = (losses_A - losses_A.min()) / (losses_A.max() - losses_A.min())
     # losses_A = z_score_normalization(losses_A.cpu().numpy())
@@ -915,7 +945,7 @@ def eval_train_cc(
     pred_loss_B = split_prob(prob_loss_B, opt.p_threshold)
 
 
-    print("\nFitting GMM of ctt...")
+    print("\nFitting GMM of PO...")
     # fit a two-component GMM to the loss
     gmm_A = GaussianMixture(n_components=2, max_iter=10, tol=1e-2, reg_covar=5e-4)
     gmm_A.fit(input_ctt_A)

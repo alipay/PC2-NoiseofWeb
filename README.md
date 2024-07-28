@@ -104,7 +104,7 @@ python ./PC2/run.py --world-size 1 --rank 0 --gpu [0/1/...] @@@other args@@@
 python ./PC2/run.py --world-size 1 --rank 0 --multiprocessing-distributed @@@other args@@@
 ```
 
-**Please note that** the original training code can only run on a single GPU. In order to make it easier for our friends to use our code, we tried to provide a multi-GPU parallel training version based on `DistributedDataParallel`. Unfortunately, there seem to be some bugs that we have not yet solved. The following error may occur during training: 
+**Please note that** our code is based on the [NCR implementation](https://github.com/XLearning-SCU/2021-NeurIPS-NCR) and the original training code can only run on a single GPU (see [issue#4](https://github.com/XLearning-SCU/2021-NeurIPS-NCR/issues/4)). In order to make it easier for you to use our code, we tried to provide a multi-GPU parallel training version based on `DistributedDataParallel`. Unfortunately, there seem to be some bugs that we have not yet solved. The following error may occur during training: 
 
 ```
 [rank0]:[E ProcessGroupNCCL.cpp:523] [Rank 0] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=16349, OpType=ALLGATHER, NumelIn=1, NumelOut=2, Timeout(ms)=600000) ran for 600341 milliseconds before timing out.

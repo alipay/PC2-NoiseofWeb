@@ -9,7 +9,6 @@ import argparse
 import numpy as np
 import torch
 
-from utils import save_config, load_config
 from evaluation import evalrank
 from co_train import main
 import torch.multiprocessing as mp
@@ -27,6 +26,9 @@ def run():
     )
     parser.add_argument(
         "--data_name", default="f30k_precomp", help="{coco,f30k,cc152k,now100k_precomp}_precomp"
+    )
+    parser.add_argument(
+        "--tokenizer", default="bpe", help="{bpe,bert}"
     )
     parser.add_argument(
         "--vocab_path",
@@ -175,9 +177,6 @@ def run():
     if opt.data_name in ["cc152k_precomp", "now100k_precomp"]:
         opt.noise_ratio = 0
         opt.noise_file = ""
-
-    print("\n*-------- Experiment Config --------*")
-    print(opt)
     
     # set random seed
     random.seed(opt.seed)
@@ -188,8 +187,7 @@ def run():
         torch.cuda.manual_seed(opt.seed)
         torch.backends.cudnn.benchmark = True
 
-    # save config
-    save_config(opt, os.path.join(opt.output_dir, "config.json"))
+    
 
     # traing and evaluation
     print("\n*-------- Training --------*")

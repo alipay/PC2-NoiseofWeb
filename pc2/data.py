@@ -177,7 +177,7 @@ def collate_fn(data):
         return images, text, lengths, ids
 
 
-def get_dataset(data_path, data_name, data_split, vocab, return_id_caps=False):
+def get_dataset(data_path, data_name, data_split, vocab, tokenizer=None, return_id_caps=False):
     data_path = os.path.join(data_path, data_name)
 
     # Captions
@@ -189,9 +189,12 @@ def get_dataset(data_path, data_name, data_split, vocab, return_id_caps=False):
             for line in tsvreader:
                 captions.append(line[1].strip())
                 img_ids.append(line[0])
-
-    elif data_name in ["coco_precomp", "f30k_precomp", "now100k_precomp"]:
+    elif data_name in ["coco_precomp", "f30k_precomp"]:
         with open(os.path.join(data_path, "%s_caps.txt" % data_split), "r") as f:
+            for line in f:
+                captions.append(line.strip())
+    elif data_name == "now100k_precomp":
+        with open(os.path.join(data_path, "{}_caps_{}.txt".format(data_split, tokenizer))) as f:
             for line in f:
                 captions.append(line.strip())
 

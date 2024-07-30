@@ -99,15 +99,15 @@ def evalrank(model_path, data_path=None, vocab_path=None, data_loader=None, spli
             opt.vocab_size = len(vocab)
         else:
             vocab = deserialize_vocab(
-            os.path.join(opt.vocab_path, "%s_vocab.json" % opt.data_name)
+            os.path.join(opt.vocab_path, "{}_vocab_{}.json".format(opt.data_name, opt.tokenizer))
             )
-            opt.vocab_size = 60000
+            opt.vocab_size = vocab.idx
         if opt.data_name == "cc152k_precomp":
             captions, images, image_ids, raw_captions = get_dataset(
-                opt.data_path, opt.data_name, split, vocab, return_id_caps=True
+                opt.data_path, opt.data_name, split, vocab, opt.tokenizer, return_id_caps=True
             )
         else:
-            captions, images = get_dataset(opt.data_path, opt.data_name, split, vocab)
+            captions, images = get_dataset(opt.data_path, opt.data_name, split, vocab, opt.tokenizer)
         data_loader = get_loader(opt.data_name, captions, images, split, opt.batch_size, opt.workers)
 
     if opt.data_name in ["cc152k_precomp", "now100k_precomp"]:

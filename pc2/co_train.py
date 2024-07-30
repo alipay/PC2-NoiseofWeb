@@ -251,10 +251,10 @@ def main(gpu, ngpus_per_node, opt):
                 print(checkpoint.keys())
                 start_epoch = checkpoint["epoch"] + 1
                 # opt = checkpoint["opt"]
-                print("\nValidattion ...")
+                print("\nValidating ...")
                 best_rsum = validate(opt, val_loader, [model_A, model_B])             
             else:
-                print("\nValidattion ...")
+                print("\nValidating ...")
                 validate(opt, val_loader, [model_A, model_B])
         else:
             raise Exception(
@@ -288,13 +288,12 @@ def main(gpu, ngpus_per_node, opt):
                 "model_B": model_B.state_dict(),
                 "opt": opt,
             },
-            is_best=False,
             filename="warmup_model_{}.pth.tar".format(epoch),
             prefix=opt.output_dir + "/",
         )
         
         # evaluate on validation set
-        print("\nValidattion ...")
+        print("\nValidating ...")
         validate(opt, val_loader, [model_A, model_B])
 
     # save the history of losses from two networks
@@ -370,7 +369,7 @@ def main(gpu, ngpus_per_node, opt):
 
         if epoch == opt.warmup_epoch_2:
             best_rsum = 0
-        print("\nValidattion ...")
+        print("\nValidating ...")
         # evaluate on validation set
         rsum = validate(opt, val_loader, [model_A, model_B])
         print("\nSaving the latest checkpoint...")
@@ -385,15 +384,15 @@ def main(gpu, ngpus_per_node, opt):
                 "opt": opt,
             },
             # filename="checkpoint_{}.pth.tar".format(epoch),
-            filename="checkpoint_latest_validattion.pth.tar",
+            filename="checkpoint_latest_validation.pth.tar",
             prefix=opt.output_dir + "/",
         )
         # remember best R@ sum and save checkpoint
         is_best = rsum > best_rsum
         best_rsum = max(rsum, best_rsum)
         if is_best:
-            print("\nBest validattion!")
-            shutil.copyfile(opt.output_dir + "/" + "checkpoint_latest_validattion.pth.tar", opt.output_dir + "/" + "checkpoint_best_validattion.pth.pth.tar")    
+            print("\nBest validation!")
+            shutil.copyfile(opt.output_dir + "/" + "checkpoint_latest_validation.pth.tar", opt.output_dir + "/" + "checkpoint_best_validation.pth.tar")    
             print("\nTesting ...")
             if opt.data_name == "coco_precomp":
                 print("5 fold validation")
@@ -405,7 +404,7 @@ def main(gpu, ngpus_per_node, opt):
                 )
                 print("full validation")
                 # rsum_test_full = evalrank(os.path.join(opt.output_dir, "checkpoint_best_test.pth.tar"), split="testall")
-                rsum_test_full = evalrank(os.path.join(opt.output_dir, "checkpoint_best_validattion.pth.tar"), data_loader=data_loader_test)
+                rsum_test_full = evalrank(os.path.join(opt.output_dir, "checkpoint_best_validation.pth.tar"), data_loader=data_loader_test)
                 is_best = rsum_test_5fold > best_rsum_test_5fold
                 if is_best:
                     best_rsum_test_5fold = rsum_test_5fold
@@ -415,7 +414,7 @@ def main(gpu, ngpus_per_node, opt):
                     best_rsum_test_full = rsum_test_full
                     print("\nBest testing over full 5K!")
             else:
-                rsum_test = evalrank(os.path.join(opt.output_dir, "checkpoint_best_validattion.pth.tar"), data_loader=data_loader_test)
+                rsum_test = evalrank(os.path.join(opt.output_dir, "checkpoint_best_validation.pth.tar"), data_loader=data_loader_test)
                 is_best = rsum_test > best_rsum_test    
                 if is_best:
                     best_rsum_test = rsum_test

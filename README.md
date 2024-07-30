@@ -7,7 +7,7 @@ This repo is the official Pytorch implementation of our paper:
 > ***Authors**: Yue Duan, Zhangxuan Gu, Zhenzhe Ying, Lei Qi, Changhua Meng and Yinghuan Shi*
  
  
-- Quick links: [[arXiv (coming soon)]() | [Published paper (coming soon)]() | [Poster (coming soon)]() | [Zhihu (coming soon)]() | [Code download]() | [Dataset download](https://drive.google.com/file/d/1MsR9GmRDUj4NoeL4xL8TXpes51JnpsrZ/view?usp=drive_link)]
+- Quick links: [[arXiv (coming soon)]() | [Published paper (coming soon)]() | [Poster (coming soon)]() | [Zhihu (coming soon)]() | [Code download]() | [Dataset download](https://huggingface.co/datasets/NJUyued/NoW)]
  
  - Latest news:
      <!-- - We write a detailed introduction to this work on the [Zhihu](https://zhuanlan.zhihu.com/p/653555164). -->
@@ -44,15 +44,19 @@ We develop a new dataset named **Noise of Web (NoW)** for NCL. It contains 100K 
 |   |-- train_caps_bert.txt
 |   |-- train_ids.txt
 |   |-- train_ims.npy
+|-- vocab
+|   |-- now100k_precomp_vocab_bert.json
+|   |-- now100k_precomp_vocab_bpe.json
+|   |-- now100k_precomp_vocab_jieba.json
 
 ```
 
-Please note that since our raw data contains some sensitive business data, we only provide the **encoded image features** (\*_ims.npy) and the **token ids of the text tokenized**. For tokenizer, we use both [Tokenizers](https://github.com/huggingface/tokenizers) with [BPE](https://huggingface.co/docs/tokenizers/api/models#tokenizers.models.BPE) to produce \*_caps_bpe.txt and [BertTokenizer](https://huggingface.co/transformers/v3.0.2/model_doc/bert.html#berttokenizer) with [bert-base-multilingual-cased](https://huggingface.co/google-bert/bert-base-multilingual-cased) pre-trained model to produce \*_caps_bert.txt. **Our vocabulary size of BPE tokenizer is 10,000 and that of BertTokenizer is 32702**. \*_ids.txt records the serial number of the data in the original 500k dataset. In the future, we may process and make the original dataset public.
+Please note that since our raw data contains some sensitive business data, we only provide the **encoded image features** (\*_ims.npy) and the **token ids of the text tokenized**. For tokenizer, we provide [Tokenizers](https://github.com/huggingface/tokenizers) with [BPE](https://huggingface.co/docs/tokenizers/api/models#tokenizers.models.BPE) to produce \*_caps_bpe.txt, [BertTokenizer](https://huggingface.co/transformers/v3.0.2/model_doc/bert.html#berttokenizer) with [bert-base-multilingual-cased](https://huggingface.co/google-bert/bert-base-multilingual-cased) pre-trained model to produce \*_caps_bert.txt, and [Jieba] to produce \*_caps_jieba.txt. **Our vocabulary size of BPETokenizer is 10,000 and that of BertTokenizer and JiebaTokenizer are 32702 and 56271, respectively (recorded in now100k_precomp_vocab_\*.txt)**. \*_ids.txt records the serial number of the data in the original 500k dataset. In the future, we may process and make the original dataset public.
 
 
 ### Download link
 
-**https://drive.google.com/file/d/1MsR9GmRDUj4NoeL4xL8TXpes51JnpsrZ/view?usp=drive_link**
+🤗 **https://huggingface.co/datasets/NJUyued/NoW** 🤗
 
 ### Usage
 
@@ -88,7 +92,7 @@ In the realm of cross-modal retrieval, seamlessly integrating diverse modalities
 - `--po_dir` : When `--resume`, use this path to load the PO data for resuming training.
 - `--model_path` : Use this path to load the checkpoint for resuming training when `--resume`, or use this path to load the warmup checkpoint for resuming training without `--resume`.
 - `--data_name {coco,f30k,cc152k,now100k}_precomp` and `--data_path`  : Your dataset name and path.  
-- `--tokenizer {bpe,bert}`: The tokenizer used for NoW dataset.  
+- `--tokenizer {bpe,bert,jieba}`: The tokenizer used for NoW dataset.  
 - `--noise_ratio`: Noisy ratio for Flickr30K and MS-COCO.
 - `--noise_file`: Noise file for the feproduction of noise correspondence.
 

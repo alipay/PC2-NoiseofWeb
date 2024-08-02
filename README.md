@@ -34,14 +34,17 @@ We develop a new dataset named **Noise of Web (NoW)** for NCL. It contains **100
 |-- h5100k_precomp
 |   |-- dev_caps_bpe.txt
 |   |-- dev_caps_bert.txt
+|   |-- dev_caps_jieba.txt
 |   |-- dev_ids.txt
 |   |-- dev_ims.npy
 |   |-- test_caps_bpe.txt
 |   |-- test_caps_bert.txt
+|   |-- test_caps_jieba.txt
 |   |-- test_ids.txt
 |   |-- test_ims.npy
 |   |-- train_caps_bpe.txt
 |   |-- train_caps_bert.txt
+|   |-- train_caps_jieba.txt
 |   |-- train_ids.txt
 |   |-- train_ims.npy
 |-- vocab
@@ -51,7 +54,7 @@ We develop a new dataset named **Noise of Web (NoW)** for NCL. It contains **100
 
 ```
 
-Please note that since our raw data contains some sensitive business data, we only provide the **encoded image features** (\*_ims.npy) and the **token ids of the text tokenized**. For tokenizer, we provide [Tokenizers](https://github.com/huggingface/tokenizers) with [BPE](https://huggingface.co/docs/tokenizers/api/models#tokenizers.models.BPE) to produce \*_caps_bpe.txt, [BertTokenizer](https://huggingface.co/transformers/v3.0.2/model_doc/bert.html#berttokenizer) with [bert-base-multilingual-cased](https://huggingface.co/google-bert/bert-base-multilingual-cased) pre-trained model to produce \*_caps_bert.txt, and [Jieba](https://github.com/fxsjy/jieba) to produce \*_caps_jieba.txt. **Our vocabulary size of BPETokenizer is 10,000 and that of BertTokenizer and JiebaTokenizer are 32,702 and 56,271**, respectively (recorded in now100k_precomp_vocab\_\*.txt). \*_ids.txt records the serial number of the data in the original 500k dataset. In the future, we may process and make the original dataset public.
+Please note that since our raw data contains some sensitive business data, we only provide the **encoded image features** (\*_ims.npy) and the **token ids of the text tokenized**. For tokenizer, we provide [Tokenizers](https://github.com/huggingface/tokenizers) with [BPE](https://huggingface.co/docs/tokenizers/api/models#tokenizers.models.BPE) to produce \*_caps_bpe.txt, [BertTokenizer](https://huggingface.co/transformers/v3.0.2/model_doc/bert.html#berttokenizer) with [bert-base-multilingual-cased](https://huggingface.co/google-bert/bert-base-multilingual-cased) pre-trained model to produce \*_caps_bert.txt, and [Jieba](https://github.com/fxsjy/jieba) to produce \*_caps_jieba.txt. **Our vocabulary size of BPETokenizer is 10,000, while BertTokenizer and JiebaTokenizer have a vocabulary size of 32,702 and 56,271 respectively.** (recorded in now100k_precomp_vocab\_\*.txt). \*_ids.txt records the data indexs in the original 500k dataset. In the future, we may process and make the original dataset public.
 
 
 ### Download link

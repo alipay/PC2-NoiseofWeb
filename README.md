@@ -63,7 +63,33 @@ Please note that since our raw data contains some sensitive business data, we on
 
 ### Usage
 
-Please see the code snippet in `co_train.py`, `data.py`, `evaluation.py` and `run.py` containing the `now100k_precomp` string to process the NoW dataset for use in your own code. 
+```
+# data_path: your dataset name and path
+# data_split: {train,dev,test}
+# tokenizer: {bpe,bert,jieba}
+# vocabulary size of {bpe,bert,jieba} is {10,000,32702,56271} 
+
+
+# captions
+with open(os.path.join(data_path, "{}_caps_{}.txt".format(data_split, tokenizer))) as f:
+    for line in f:
+        captions.append(line.strip())
+captions_token = []
+for index in range(len(captions)):
+  caption = captions[index]
+  tokens = caption.split(',')
+  caption = []
+  caption.append(vocab("<start>"))
+  caption.extend([int(token) for token in tokens if token])
+  caption.append(vocab("<end>"))
+  captions_token.append(caption)
+
+# images
+images = np.load(os.path.join(data_path, "%s_ims.npy" % data_split))
+
+return captions_token, images
+```
+Additionally, you can search for code snippets containing the string `now100k_precomp` in `co_train.py`, `data.py`, `evaluation.py`, and `run.py` in this repo and refer to them to process the NoW dataset for use in your own code.
 
 ## PC2
 ### Introduction

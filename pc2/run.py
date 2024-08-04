@@ -126,7 +126,7 @@ def run():
         "--no_co_training", action="store_true", help="No co-training for noisy label."
     )
     parser.add_argument(
-        "--warmup_type", default='warmup_sele', help="Warmup with selected samples."
+        "--warmup_type", default='warmup', help="{warmup,warmup_sele}"
     )
     parser.add_argument("--warmup_epoch", default=1, type=int, help="Epochs of warm up stage.")
     parser.add_argument("--warmup_epoch_2", default=25, type=int, help="Epochs of training with clean data only.")

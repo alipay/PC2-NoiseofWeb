@@ -69,7 +69,6 @@ Please note that since our raw data contains some sensitive business data, we on
 # tokenizer: {bpe,bert,jieba}
 # vocabulary size of {bpe,bert,jieba} is {10,000,32702,56271} 
 
-
 # captions
 with open(os.path.join(data_path, "{}_caps_{}.txt".format(data_split, tokenizer))) as f:
     for line in f:

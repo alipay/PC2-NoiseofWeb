@@ -7,10 +7,10 @@ This repo is the official Pytorch implementation of our paper:
 > ***Authors**: Yue Duan, Zhangxuan Gu, Zhenzhe Ying, Lei Qi, Changhua Meng and Yinghuan Shi*
  
  
-- Quick links: [[arXiv (coming soon)]() | [Published paper (coming soon)]() | [Poster (coming soon)]() | [Zhihu (coming soon)]() | [Code download]() | [Dataset download](https://huggingface.co/datasets/NJUyued/NoW)]
+- Quick links: [[arXiv](https://arxiv.org/abs/2408.01349) | [Published paper (coming soon)]() | [Poster (coming soon)]() | [Zhihu](https://zhuanlan.zhihu.com/p/711149124) | [Dataset download](https://huggingface.co/datasets/NJUyued/NoW)]
  
  - Latest news:
-     <!-- - We write a detailed introduction to this work on the [Zhihu](https://zhuanlan.zhihu.com/p/653555164). -->
+     - We write a detailed introduction to this work on the [Zhihu](https://zhuanlan.zhihu.com/p/711149124). 
      - Our paper is accepted by **ACM Multimedia (ACM MM) 2024** 🎉🎉. Thanks to users.
  - More of my works:
      - 🆕 **[LATEST]** Interested in the SSL in fine-grained visual classification (SS-FGVC)? 👉 Check out our AAAI'24 paper **SoC** [[arXiv](https://arxiv.org/abs/2312.12237) | [Repo](https://github.com/NJUyued/SoC4SS-FGVC/)].
@@ -198,30 +198,6 @@ python ./pc2/run.py --world-size 1 --rank 0 --gpu 0 --workers 8 --warmup_epoch 5
   By default, your evaluation process will directly use the dataset name saved in your checkpoint.
 
 
-
-
-<!-- ## Citation
-Please cite our paper if you find PRG useful:
-
-```
-@inproceedings{duan2023towards,
-  title={Towards Semi-supervised Learning with Non-random Missing Labels},
-  author={Duan, Yue and Zhao, Zhen and Qi, Lei and Zhou, Luping and Wang, Lei and Shi, Yinghuan},
-  booktitle={IEEE/CVF International Conference on Computer Vision},
-  year={2023}
-}
-```
-
-or
-
-```
-@article{duan2023towards,
-  title={Towards Semi-supervised Learning with Non-random Missing Labels},
-  author={Duan, Yue and Zhao, Zhen and Qi, Lei and Zhou, Luping and Wang, Lei and Shi, Yinghuan},
-  journal={arXiv preprint arXiv:2308.08872},
-  year={2023}
-}
-``` -->
 
 
 

@@ -4,13 +4,13 @@
 This repo is the official Pytorch implementation of our paper:
 
 > ***PC2: Pseudo-Classification Based Pseudo-Captioning for Noisy Correspondence Learning in Cross-Modal Retrieval***  
-> ***Authors**: Yue Duan, Zhangxuan Gu, Zhenzhe Ying, Lei Qi, Changhua Meng and Yinghuan Shi*
+> ***Authors**: **Yue Duan**, Zhangxuan Gu, Zhenzhe Ying, Lei Qi, Changhua Meng and Yinghuan Shi*
  
  
-- Quick links: [[arXiv](https://arxiv.org/abs/2408.01349) | [Published paper (coming soon)]() | [Poster (coming soon)]() | [Zhihu](https://zhuanlan.zhihu.com/p/711149124) | [Dataset homepage](https://huggingface.co/datasets/NJUyued/NoW)]
+- Quick links: [[arXiv](https://arxiv.org/abs/2408.01349) | [Huggingface](https://huggingface.co/datasets/NJUyued/NoW) | [Zhihu](https://zhuanlan.zhihu.com/p/711149124)]
  
  - Latest news:
-     - We write a detailed introduction to this work on the [Zhihu](https://zhuanlan.zhihu.com/p/711149124). 
+     - We write a detailed introduction to this work on the [Zhihu](https://zhuanlan.zhihu.com/p/711149124) and . 
      - Our paper is accepted by **ACM Multimedia (ACM MM) 2024** 🎉🎉. Thanks to users.
  - More of my works:
      - 🆕 **[LATEST]** Interested in the SSL in fine-grained visual classification (SS-FGVC)? 👉 Check out our AAAI'24 paper **SoC** [[arXiv](https://arxiv.org/abs/2312.12237) | [Repo](https://github.com/NJUyued/SoC4SS-FGVC/)].

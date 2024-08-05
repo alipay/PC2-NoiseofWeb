@@ -7,7 +7,7 @@ This repo is the official Pytorch implementation of our paper:
 > ***Authors**: Yue Duan, Zhangxuan Gu, Zhenzhe Ying, Lei Qi, Changhua Meng and Yinghuan Shi*
  
  
-- Quick links: [[arXiv](https://arxiv.org/abs/2408.01349) | [Published paper (coming soon)]() | [Poster (coming soon)]() | [Zhihu](https://zhuanlan.zhihu.com/p/711149124) | [Dataset download](https://huggingface.co/datasets/NJUyued/NoW)]
+- Quick links: [[arXiv](https://arxiv.org/abs/2408.01349) | [Published paper (coming soon)]() | [Poster (coming soon)]() | [Zhihu](https://zhuanlan.zhihu.com/p/711149124) | [Dataset homepage](https://huggingface.co/datasets/NJUyued/NoW)]
  
  - Latest news:
      - We write a detailed introduction to this work on the [Zhihu](https://zhuanlan.zhihu.com/p/711149124). 

@@ -7,12 +7,12 @@ This repo is the official Pytorch implementation of our paper:
 > ***Authors**: **Yue Duan**, Zhangxuan Gu, Zhenzhe Ying, Lei Qi, Changhua Meng and Yinghuan Shi*
  
  
-- Quick links: [[Paper-arXiv](https://arxiv.org/pdf/2408.01349) | [Dataset](https://huggingface.co/datasets/NJUyued/NoW) | [Zhihu](https://zhuanlan.zhihu.com/p/711149124)]
+- 🔗 Quick links: [[PDF](https://arxiv.org/pdf/2408.01349)/[Abs](https://arxiv.org/abs/2408.01349)-arXiv | [Dataset](https://huggingface.co/datasets/NJUyued/NoW) | [Zhihu](https://zhuanlan.zhihu.com/p/711149124)]
  
- - Latest news:
+ - 📰 Latest news:
      - We write a detailed introduction to this work on the [Zhihu](https://zhuanlan.zhihu.com/p/711149124). 
      - Our paper is accepted by **ACM Multimedia (ACM MM) 2024** 🎉🎉. Thanks to users.
- - More of my works:
+ - 📑 More of my works:
      - 🆕 **[LATEST]** Interested in the SSL in fine-grained visual classification (SS-FGVC)? 👉 Check out our AAAI'24 paper **SoC** [[Paper-arXiv](https://arxiv.org/pdf/2312.12237) | [Code](https://github.com/NJUyued/SoC4SS-FGVC/)].
      - Interested in more scenarios of SSL with mismatched distributions? 👉 Check out our ICCV'23 paper **PRG** [[Paper-arXiv](https://arxiv.org/pdf/2308.08872) | [Code](https://github.com/NJUyued/PRG4SSL-MNAR)].
      - Interested in robust SSL in MNAR setting with mismatched distributions? 👉 Check out our ECCV'22 paper **RDA** [[Paper-arXiv](https://arxiv.org/pdf/2208.04619v2) | [Code](https://github.com/NJUyued/RDA4RobustSSL)].

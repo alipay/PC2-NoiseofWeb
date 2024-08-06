@@ -59,9 +59,9 @@ Please note that since our raw data contains some sensitive business data, we on
 
 
 ### Download link
-Download NoW 📎**https://huggingface.co/datasets/NJUyued/NoW/resolve/main/NoW.zip?download=true** 
+📎 Download NoW at **https://huggingface.co/datasets/NJUyued/NoW/resolve/main/NoW.zip?download=true**.
 
-at HuggingFace 🤗**https://huggingface.co/datasets/NJUyued/NoW**.
+🤗 See HuggingFace's homepage **https://huggingface.co/datasets/NJUyued/NoW** for details.
 
 ### Usage
 

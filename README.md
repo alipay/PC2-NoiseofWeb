@@ -1,6 +1,5 @@
 # PC2-NoiseofWeb
 
-
 This repo is the official Pytorch implementation of our paper:
 
 > **PC2: Pseudo-Classification Based Pseudo-Captioning for Noisy Correspondence Learning in Cross-Modal Retrieval**  
@@ -10,7 +9,7 @@ This repo is the official Pytorch implementation of our paper:
 - 🔗 Quick links: [[PDF](https://arxiv.org/pdf/2408.01349)/[Abs](https://arxiv.org/abs/2408.01349)-arXiv | [Dataset](https://huggingface.co/datasets/NJUyued/NoW) | [Zhihu](https://zhuanlan.zhihu.com/p/711149124)]
  
  - 📰 Latest news:
-     - Watch the explanation of our paper on [Zhihu](https://zhuanlan.zhihu.com/p/711149124).
+     - **We write a detailed explanation (in chinese) to this work on [Zhihu](https://zhuanlan.zhihu.com/p/711149124).**
      - Our paper is accepted by **ACM International Conference on Multimedia (ACM MM) 2024** 🎉🎉. Thanks to users.
  - 📑 More of my works:
      - 🆕 **[LATEST]** Interested in the SSL in fine-grained visual classification (SS-FGVC)? 👉 Check out our AAAI'24 paper **SoC** [[PDF-arXiv](https://arxiv.org/pdf/2312.12237) | [Code](https://github.com/NJUyued/SoC4SS-FGVC/)].
@@ -200,6 +199,7 @@ python ./pc2/run.py --world-size 1 --rank 0 --gpu 0 --workers 8 --warmup_epoch 5
   By default, your evaluation process will directly use the dataset name saved in your checkpoint.
 
 ## Citation
+Please cite our paper if you find $\text{PC}^2$ useful:
 ```
 @article{duan2024pc,
   title={PC $\^{} 2$: Pseudo-Classification Based Pseudo-Captioning for Noisy Correspondence Learning in Cross-Modal Retrieval},

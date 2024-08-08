@@ -4,14 +4,14 @@
 This repo is the official Pytorch implementation of our paper:
 
 > **PC2: Pseudo-Classification Based Pseudo-Captioning for Noisy Correspondence Learning in Cross-Modal Retrieval**  
-> ***Authors**: **Yue Duan**, Zhangxuan Gu, Zhenzhe Ying, Lei Qi, Changhua Meng and Yinghuan Shi*
+> **Authors**: ***[Yue Duan](https://njuyued.github.io/)**, Zhangxuan Gu, Zhenzhe Ying, Lei Qi, Changhua Meng and Yinghuan Shi*
  
  
 - 🔗 Quick links: [[PDF](https://arxiv.org/pdf/2408.01349)/[Abs](https://arxiv.org/abs/2408.01349)-arXiv | [Dataset](https://huggingface.co/datasets/NJUyued/NoW) | [Zhihu](https://zhuanlan.zhihu.com/p/711149124)]
  
  - 📰 Latest news:
-     - We write a detailed introduction to this work on the [Zhihu](https://zhuanlan.zhihu.com/p/711149124). 
-     - Our paper is accepted by **ACM Multimedia (ACM MM) 2024** 🎉🎉. Thanks to users.
+     - Watch the explanation of our paper on [Zhihu](https://zhuanlan.zhihu.com/p/711149124).
+     - Our paper is accepted by **ACM International Conference on Multimedia (ACM MM) 2024** 🎉🎉. Thanks to users.
  - 📑 More of my works:
      - 🆕 **[LATEST]** Interested in the SSL in fine-grained visual classification (SS-FGVC)? 👉 Check out our AAAI'24 paper **SoC** [[PDF-arXiv](https://arxiv.org/pdf/2312.12237) | [Code](https://github.com/NJUyued/SoC4SS-FGVC/)].
      - Interested in more scenarios of SSL with mismatched distributions? 👉 Check out our ICCV'23 paper **PRG** [[PDF-arXiv](https://arxiv.org/pdf/2308.08872) | [Code](https://github.com/NJUyued/PRG4SSL-MNAR)].
@@ -58,7 +58,7 @@ We develop a new dataset named **Noise of Web (NoW)** for NCL. It contains **100
 Please note that since our raw data contains some sensitive business data, we only provide the **encoded image features** (\*_ims.npy) and the **token ids of the text tokenized**. For tokenizer, we provide [Tokenizers](https://github.com/huggingface/tokenizers) with [BPE](https://huggingface.co/docs/tokenizers/api/models#tokenizers.models.BPE) to produce \*_caps_bpe.txt, [BertTokenizer](https://huggingface.co/transformers/v3.0.2/model_doc/bert.html#berttokenizer) with [bert-base-multilingual-cased](https://huggingface.co/google-bert/bert-base-multilingual-cased) pre-trained model to produce \*_caps_bert.txt, and [Jieba](https://github.com/fxsjy/jieba) to produce \*_caps_jieba.txt. **Our vocabulary size of BPETokenizer is 10,000, while BertTokenizer and JiebaTokenizer have a vocabulary size of 32,702 and 56,271 respectively.** (recorded in now100k_precomp_vocab\_\*.txt). \*_ids.txt records the data indexs in the original 500k dataset. In the future, we may process and make the original dataset public.
 
 
-### Download link
+### Download Link
 📎 Download NoW at **https://huggingface.co/datasets/NJUyued/NoW/resolve/main/NoW.zip?download=true**.
 
 🤗 See HuggingFace's homepage **https://huggingface.co/datasets/NJUyued/NoW** for details.
@@ -198,6 +198,16 @@ python ./pc2/run.py --world-size 1 --rank 0 --gpu 0 --workers 8 --warmup_epoch 5
   ```
       
   By default, your evaluation process will directly use the dataset name saved in your checkpoint.
+
+## Citation
+```
+@article{duan2024pc,
+  title={PC $\^{} 2$: Pseudo-Classification Based Pseudo-Captioning for Noisy Correspondence Learning in Cross-Modal Retrieval},
+  author={Duan, Yue and Gu, Zhangxuan and Ying, Zhenzhe and Qi, Lei and Meng, Changhua and Shi, Yinghuan},
+  journal={arXiv preprint arXiv:2408.01349},
+  year={2024}
+}
+```
 
 
 

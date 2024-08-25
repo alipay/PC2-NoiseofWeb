@@ -1,25 +1,25 @@
 # PC2-NoiseofWeb
 
-
 This repo is the official Pytorch implementation of our paper:
 
-> ***PC2: Pseudo-Classification Based Pseudo-Captioning for Noisy Correspondence Learning in Cross-Modal Retrieval***  
-> ***Authors**: Yue Duan, Zhangxuan Gu, Zhenzhe Ying, Lei Qi, Changhua Meng and Yinghuan Shi*
+> **PC2: Pseudo-Classification Based Pseudo-Captioning for Noisy Correspondence Learning in Cross-Modal Retrieval**  
+> **Authors**: ***[Yue Duan](https://njuyued.github.io/)**, Zhangxuan Gu, Zhenzhe Ying, Lei Qi, Changhua Meng and Yinghuan Shi*
  
  
-- Quick links: [[arXiv (coming soon)]() | [Published paper (coming soon)]() | [Poster (coming soon)]() | [Zhihu (coming soon)]() | [Code download]() | [Dataset download](https://huggingface.co/datasets/NJUyued/NoW)]
+- 🔗 **Quick links:** [[PDF](https://arxiv.org/pdf/2408.01349)/[Abs](https://arxiv.org/abs/2408.01349)-arXiv | [Dataset](https://huggingface.co/datasets/NJUyued/NoW) | [Zhihu](https://zhuanlan.zhihu.com/p/711149124)]
  
- - Latest news:
-     <!-- - We write a detailed introduction to this work on the [Zhihu](https://zhuanlan.zhihu.com/p/653555164). -->
-     - Our paper is accepted by **ACM Multimedia (ACM MM) 2024** 🎉🎉. Thanks to users.
- - More of my works:
-     - 🆕 **[LATEST]** Interested in the SSL in fine-grained visual classification (SS-FGVC)? 👉 Check out our AAAI'24 paper **SoC** [[arXiv](https://arxiv.org/abs/2312.12237) | [Repo](https://github.com/NJUyued/SoC4SS-FGVC/)].
-     - Interested in robust SSL in MNAR setting with mismatched distributions? 👉 Check out our ECCV'22 paper **RDA** [[arXiv](https://arxiv.org/abs/2208.04619) | [Repo](https://github.com/NJUyued/RDA4RobustSSL)].
-     - Interested in the conventional SSL or more application of complementary label in SSL? 👉 Check out our TNNLS paper **MutexMatch** [[arXiv](https://arxiv.org/abs/2203.14316) | [Repo](https://github.com/NJUyued/MutexMatch4SSL/)].
+ - 📰 **Latest news:**
+     - **We write a detailed explanation (in chinese) of this work on [Zhihu](https://zhuanlan.zhihu.com/p/711149124).**
+     - Our paper is accepted by **ACM International Conference on Multimedia (ACM MM) 2024** 🎉🎉. Thanks to users.
+ - 📑 **More of my works:**
+     - 🆕 **[LATEST]** Interested in the **SSL in fine-grained visual classification (SS-FGVC)**? 👉 Check out our AAAI'24 paper **SoC** [[PDF-arXiv](https://arxiv.org/pdf/2312.12237) | [Code](https://github.com/NJUyued/SoC4SS-FGVC/)].
+     - Interested in more scenarios of **SSL with mismatched distributions**? 👉 Check out our ICCV'23 paper **PRG** [[PDF-arXiv](https://arxiv.org/pdf/2308.08872) | [Code](https://github.com/NJUyued/PRG4SSL-MNAR)].
+     - Interested in **robust SSL in MNAR setting** with mismatched distributions? 👉 Check out our ECCV'22 paper **RDA** [[PDF-arXiv](https://arxiv.org/pdf/2208.04619v2) | [Code](https://github.com/NJUyued/RDA4RobustSSL)].
+     - Interested in the conventional SSL or more application of **complementary label in SSL**? 👉 Check out our TNNLS paper **MutexMatch** [[PDF-arXiv](https://arxiv.org/pdf/2203.14316) | [Code](https://github.com/NJUyued/MutexMatch4SSL/)].
 
 ## Dataset Contribution: Noise of Web (NoW)
 ### Data Collection
-We develop a new dataset named **Noise of Web (NoW)** for NCL. It contains **100K** cross-modal pairs consisting of **website images** and **multilingual website meta-descriptions** (**98,000 pairs for training, 1,000 for validation, and 1,000 for testing**). NoW has two main characteristics: *without human annotations and the noisy pairs are naturally captured*.  The source image data of NoW is obtained by taking screenshots when accessing web pages on mobile user interface (MUI) with 720 $\times$ 1280 resolution, and we parse the meta-description field in the HTML source code as the captions. In [NCR](https://github.com/XLearning-SCU/2021-NeurIPS-NCR) (predecessor of NCL), each image in all datasets were preprocessed using Faster-RCNN detector provided by [Bottom-up Attention Model](https://github.com/peteanderson80/bottom-up-attention) to generate 36 region proposals, and each proposal was encoded as a 2048-dimensional feature. Thus, following NCR, we release our the features instead of raw images for fair comparison. However, we can not just use detection methods like Faster-RCNN to extract image features since it is trained on real-world animals and objects on MS-COCO. To tackle this, we adapt [APT](https://openaccess.thecvf.com/content/CVPR2023/papers/Gu_Mobile_User_Interface_Element_Detection_via_Adaptively_Prompt_Tuning_CVPR_2023_paper.pdf) as the detection model since it is trained on MUI data. Then, we capture the 768-dimensional features of top 36 objects for one image. Due to the automated and non-human curated data collection process, the noise in NoW is highly authentic and intrinsic.  **The estimated noise ratio of this dataset is nearly 70%**.  
+We develop a new dataset named **Noise of Web (NoW)** for NCL. It contains **100K image-text pairs** consisting of **website pages** and **multilingual website meta-descriptions** (**98,000 pairs for training, 1,000 for validation, and 1,000 for testing**). NoW has two main characteristics: *without human annotations and the noisy pairs are naturally captured*.  The source image data of NoW is obtained by taking screenshots when accessing web pages on mobile user interface (MUI) with 720 $\times$ 1280 resolution, and we parse the meta-description field in the HTML source code as the captions. In [NCR](https://github.com/XLearning-SCU/2021-NeurIPS-NCR) (predecessor of NCL), each image in all datasets were preprocessed using Faster-RCNN detector provided by [Bottom-up Attention Model](https://github.com/peteanderson80/bottom-up-attention) to generate 36 region proposals, and each proposal was encoded as a 2048-dimensional feature. Thus, following NCR, we release our the features instead of raw images for fair comparison. However, we can not just use detection methods like Faster-RCNN to extract image features since it is trained on real-world animals and objects on MS-COCO. To tackle this, we adapt [APT](https://openaccess.thecvf.com/content/CVPR2023/papers/Gu_Mobile_User_Interface_Element_Detection_via_Adaptively_Prompt_Tuning_CVPR_2023_paper.pdf) as the detection model since it is trained on MUI data. Then, we capture the 768-dimensional features of top 36 objects for one image. Due to the automated and non-human curated data collection process, the noise in NoW is highly authentic and intrinsic.  **The estimated noise ratio of this dataset is nearly 70%**.  
 
 <div align=center>
 
@@ -34,14 +34,17 @@ We develop a new dataset named **Noise of Web (NoW)** for NCL. It contains **100
 |-- h5100k_precomp
 |   |-- dev_caps_bpe.txt
 |   |-- dev_caps_bert.txt
+|   |-- dev_caps_jieba.txt
 |   |-- dev_ids.txt
 |   |-- dev_ims.npy
 |   |-- test_caps_bpe.txt
 |   |-- test_caps_bert.txt
+|   |-- test_caps_jieba.txt
 |   |-- test_ids.txt
 |   |-- test_ims.npy
 |   |-- train_caps_bpe.txt
 |   |-- train_caps_bert.txt
+|   |-- train_caps_jieba.txt
 |   |-- train_ids.txt
 |   |-- train_ims.npy
 |-- vocab
@@ -51,16 +54,42 @@ We develop a new dataset named **Noise of Web (NoW)** for NCL. It contains **100
 
 ```
 
-Please note that since our raw data contains some sensitive business data, we only provide the **encoded image features** (\*_ims.npy) and the **token ids of the text tokenized**. For tokenizer, we provide [Tokenizers](https://github.com/huggingface/tokenizers) with [BPE](https://huggingface.co/docs/tokenizers/api/models#tokenizers.models.BPE) to produce \*_caps_bpe.txt, [BertTokenizer](https://huggingface.co/transformers/v3.0.2/model_doc/bert.html#berttokenizer) with [bert-base-multilingual-cased](https://huggingface.co/google-bert/bert-base-multilingual-cased) pre-trained model to produce \*_caps_bert.txt, and [Jieba](https://github.com/fxsjy/jieba) to produce \*_caps_jieba.txt. **Our vocabulary size of BPETokenizer is 10,000 and that of BertTokenizer and JiebaTokenizer are 32,702 and 56,271**, respectively (recorded in now100k_precomp_vocab\_\*.txt). \*_ids.txt records the serial number of the data in the original 500k dataset. In the future, we may process and make the original dataset public.
+Please note that since our raw data contains some sensitive business data, we only provide the **encoded image features** (\*_ims.npy) and the **token ids of the text tokenized**. For tokenizer, we provide [Tokenizers](https://github.com/huggingface/tokenizers) with [BPE](https://huggingface.co/docs/tokenizers/api/models#tokenizers.models.BPE) to produce \*_caps_bpe.txt, [BertTokenizer](https://huggingface.co/transformers/v3.0.2/model_doc/bert.html#berttokenizer) with [bert-base-multilingual-cased](https://huggingface.co/google-bert/bert-base-multilingual-cased) pre-trained model to produce \*_caps_bert.txt, and [Jieba](https://github.com/fxsjy/jieba) to produce \*_caps_jieba.txt. **Our vocabulary size of BPETokenizer is 10,000, while BertTokenizer and JiebaTokenizer have a vocabulary size of 32,702 and 56,271 respectively.** (recorded in now100k_precomp_vocab\_\*.txt). \*_ids.txt records the data indexs in the original 500k dataset. In the future, we may process and make the original dataset public.
 
 
-### Download link
+### Download Link
+📎 Download NoW at **https://huggingface.co/datasets/NJUyued/NoW/resolve/main/NoW.zip?download=true**.
 
-🤗 **https://huggingface.co/datasets/NJUyued/NoW** 🤗
+🤗 See HuggingFace's homepage **https://huggingface.co/datasets/NJUyued/NoW** for details.
 
 ### Usage
 
-Please see the code snippet in `co_train.py`, `data.py`, `evaluation.py` and `run.py` containing the `now100k_precomp` string to process the NoW dataset for use in your own code. 
+```
+# data_path: your dataset name and path
+# data_split: {train,dev,test}
+# tokenizer: {bpe,bert,jieba}
+# vocabulary size of {bpe,bert,jieba} is {10,000,32702,56271} 
+
+# captions
+with open(os.path.join(data_path, "{}_caps_{}.txt".format(data_split, tokenizer))) as f:
+    for line in f:
+        captions.append(line.strip())
+captions_token = []
+for index in range(len(captions)):
+  caption = captions[index]
+  tokens = caption.split(',')
+  caption = []
+  caption.append(vocab("<start>"))
+  caption.extend([int(token) for token in tokens if token])
+  caption.append(vocab("<end>"))
+  captions_token.append(caption)
+
+# images
+images = np.load(os.path.join(data_path, "%s_ims.npy" % data_split))
+
+return captions_token, images
+```
+Additionally, you can search for code snippets containing the string `now100k_precomp` in `co_train.py`, `data.py`, `evaluation.py`, and `run.py` in this repo and refer to them to process the NoW dataset for use in your own code.
 
 ## PC2
 ### Introduction
@@ -169,31 +198,18 @@ python ./pc2/run.py --world-size 1 --rank 0 --gpu 0 --workers 8 --warmup_epoch 5
       
   By default, your evaluation process will directly use the dataset name saved in your checkpoint.
 
-
-
-
-<!-- ## Citation
-Please cite our paper if you find PRG useful:
-
+## Citation
+Please cite our paper if you find $\text{PC}^2$ useful:
 ```
-@inproceedings{duan2023towards,
-  title={Towards Semi-supervised Learning with Non-random Missing Labels},
-  author={Duan, Yue and Zhao, Zhen and Qi, Lei and Zhou, Luping and Wang, Lei and Shi, Yinghuan},
-  booktitle={IEEE/CVF International Conference on Computer Vision},
-  year={2023}
+@article{duan2024pc,
+  title={PC $\^{} 2$: Pseudo-Classification Based Pseudo-Captioning for Noisy Correspondence Learning in Cross-Modal Retrieval},
+  author={Duan, Yue and Gu, Zhangxuan and Ying, Zhenzhe and Qi, Lei and Meng, Changhua and Shi, Yinghuan},
+  journal={arXiv preprint arXiv:2408.01349},
+  year={2024}
 }
 ```
 
-or
 
-```
-@article{duan2023towards,
-  title={Towards Semi-supervised Learning with Non-random Missing Labels},
-  author={Duan, Yue and Zhao, Zhen and Qi, Lei and Zhou, Luping and Wang, Lei and Shi, Yinghuan},
-  journal={arXiv preprint arXiv:2308.08872},
-  year={2023}
-}
-``` -->
 
 
 

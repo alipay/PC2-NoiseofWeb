@@ -759,9 +759,9 @@ class SGRAF(object):
                     distri_bank[ids[i]] = pseudo_label[i].detach().cpu().numpy()
                 for i in range(len(ids_ulb_train)):
                     distri_bank[ids_ulb_train[i]] = pseudo_label_lb[i].detach().cpu().numpy()
-            if random.random() < 0.001:
-                print(f'ulb_train_distri: {torch.mean(pseudo_label, dim=0)}, lb_train_distri: {torch.mean(pseudo_label_lb, dim=0)}')
-                print(max_idx_lb, '++++++', max_idx)  
+            # if random.random() < 0.001:
+            #     print(f'ulb_train_distri: {torch.mean(pseudo_label, dim=0)}, lb_train_distri: {torch.mean(pseudo_label_lb, dim=0)}')
+            #     print(max_idx_lb, '++++++', max_idx)  
             tmp = []
             
             for i in range(max_idx.size(0)):

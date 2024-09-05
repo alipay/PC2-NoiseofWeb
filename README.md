@@ -6,10 +6,11 @@ This repo is the official Pytorch implementation of our paper:
 > **Authors**: ***[Yue Duan](https://njuyued.github.io/)**, Zhangxuan Gu, Zhenzhe Ying, Lei Qi, Changhua Meng and Yinghuan Shi*
  
  
-- 🔗 **Quick links:** [[PDF](https://arxiv.org/pdf/2408.01349)/[Abs](https://arxiv.org/abs/2408.01349)-arXiv | [Dataset](https://huggingface.co/datasets/NJUyued/NoW) | [Zhihu](https://zhuanlan.zhihu.com/p/711149124)]
+- 🔗 **Quick links:** [[PDF](https://arxiv.org/pdf/2408.01349)/[Abs](https://arxiv.org/abs/2408.01349)-arXiv | [Dataset](https://huggingface.co/datasets/NJUyued/NoW) | [文章解读-知乎(Zhihu)](https://zhuanlan.zhihu.com/p/711149124) | [视频解读-bilibili](https://www.bilibili.com/video/BV1zppMezEQe/)]
  
  - 📰 **Latest news:**
-     - **We write a detailed explanation (in chinese) of this work on [Zhihu](https://zhuanlan.zhihu.com/p/711149124).**
+     - **We provide a video presentation (in chinese) of this work on [bilibili](https://www.bilibili.com/video/BV1zppMezEQe/).**
+     - **We write a detailed explanation (in chinese) of this work on [知乎(Zhihu)](https://zhuanlan.zhihu.com/p/711149124).**
      - Our paper is accepted by **ACM International Conference on Multimedia (ACM MM) 2024** 🎉🎉. Thanks to users.
  - 📑 **More of my works:**
      - 🆕 **[LATEST]** Interested in the **SSL in fine-grained visual classification (SS-FGVC)**? 👉 Check out our AAAI'24 paper **SoC** [[PDF-arXiv](https://arxiv.org/pdf/2312.12237) | [Code](https://github.com/NJUyued/SoC4SS-FGVC/)].

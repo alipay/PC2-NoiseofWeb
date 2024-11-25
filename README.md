@@ -6,7 +6,7 @@ This repo is the official Pytorch implementation of our paper:
 > **Authors**: ***[Yue Duan](https://njuyued.github.io/)**, Zhangxuan Gu, Zhenzhe Ying, Lei Qi, Changhua Meng and Yinghuan Shi*
  
  
-- 🔗 **Quick links:** [[PDF](https://arxiv.org/pdf/2408.01349)/[Abs](https://arxiv.org/abs/2408.01349)-arXiv | [Dataset](https://huggingface.co/datasets/NJUyued/NoW) | [文章解读-知乎(Zhihu)](https://zhuanlan.zhihu.com/p/711149124) | [视频解读-bilibili](https://www.bilibili.com/video/BV1zppMezEQe/)]
+- 🔗 **Quick links:** [[PDF](https://arxiv.org/pdf/2408.01349)/[Abs](https://arxiv.org/abs/2408.01349)-arXiv | [PDF](https://dl.acm.org/doi/pdf/10.1145/3664647.3680860)/[Abs](https://dl.acm.org/doi/abs/10.1145/3664647.3680860)-Published | [Poster/Slides](https://github.com/NJUyued/Posters-Slides-Videos/tree/master/PC2-ACMMM'24) | [Dataset](https://huggingface.co/datasets/NJUyued/NoW) | [文章解读-知乎(Zhihu)](https://zhuanlan.zhihu.com/p/711149124) | [视频解读-bilibili](https://www.bilibili.com/video/BV1zppMezEQe/)]
  
  - 📰 **Latest news:**
      - We provide a **video presentation (in chinese)** of this work on [bilibili](https://www.bilibili.com/video/BV1zppMezEQe/).

@@ -210,6 +210,19 @@ Please cite our paper if you find $\text{PC}^2$ useful:
 }
 ```
 
+or
+
+```
+@inproceedings{duan2024pc2,
+  title={Pc2: Pseudo-classification based pseudo-captioning for noisy correspondence learning in cross-modal retrieval},
+  author={Duan, Yue and Gu, Zhangxuan and Ying, Zhenzhe and Qi, Lei and Meng, Changhua and Shi, Yinghuan},
+  booktitle={ACM International Conference on Multimedia},
+  pages={9397--9406},
+  year={2024}
+}
+```
+
+
 
 
 
